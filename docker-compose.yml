@@ -1,0 +1,41 @@
+name: microclimate-iot-system
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: mssql_server
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_PID=Developer
+      - MSSQL_SA_PASSWORD=SuperStrong!Passw0rd2024
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    networks:
+      - iot_network
+    restart: unless-stopped
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq_server
+    environment:
+      - RABBITMQ_DEFAULT_USER=iot_admin
+      - RABBITMQ_DEFAULT_PASS=iot_secure_password
+    ports:
+      - "5672:5672"   # AMQP protocol port
+      - "15672:15672" # Management UI port
+      - "1883:1883"   # MQTT protocol port
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - iot_network
+    restart: unless-stopped
+
+volumes:
+  sqlserver_data:
+  rabbitmq_data:
+
+networks:
+  iot_network:
+    driver: bridge

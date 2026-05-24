@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/MicroclimateIotSystem.Application/MicroclimateIotSystem.Application.csproj" />
+    <Project Path="src/MicroclimateIotSystem.Domain/MicroclimateIotSystem.Domain.csproj" />
+    <Project Path="src/MicroclimateIotSystem.Infrastructure/MicroclimateIotSystem.Infrastructure.csproj" />
+    <Project Path="src/MicroclimateIotSystem.WebAPI/MicroclimateIotSystem.WebAPI.csproj" />
+  </Folder>
+</Solution>
