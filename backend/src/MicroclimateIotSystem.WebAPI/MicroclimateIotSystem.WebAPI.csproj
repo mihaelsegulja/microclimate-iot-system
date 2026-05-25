@@ -7,12 +7,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.25" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\MicroclimateIotSystem.Infrastructure\MicroclimateIotSystem.Infrastructure.csproj" />
+    <ProjectReference Include="..\MicroclimateIotSystem.Application\MicroclimateIotSystem.Application.csproj" />
   </ItemGroup>
 
 </Project>
