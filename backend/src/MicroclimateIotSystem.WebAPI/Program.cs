@@ -2,6 +2,7 @@ using System.Text.Json.Serialization;
 using MicroclimateIotSystem.Application;
 using MicroclimateIotSystem.Infrastructure;
 using MicroclimateIotSystem.WebAPI.Abstractions;
+using MicroclimateIotSystem.WebAPI.Endpoints;
 using MicroclimateIotSystem.WebAPI.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,12 +12,15 @@ builder.Services.AddInfrastructure(builder.Configuration);
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddJwtAuthentication(builder.Configuration);
-builder.Services.AddControllers()
-    .AddJsonOptions(options =>
-    {
-        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-        options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
-    });
+builder.Services.AddAuthorization(); // Added Authorization services
+
+builder.Services.AddSwagger();
+
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    options.SerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+});
 
 builder.Services.Configure<RouteOptions>(options =>
 {
@@ -27,7 +31,6 @@ builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
@@ -37,6 +40,9 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+    
+    app.ApplyMigrations();
+    await app.SeedDataAsync();
 }
 
 app.UseHttpsRedirection();
@@ -44,6 +50,6 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapControllers();
+app.MapAuthEndpoints();
 
 app.Run();
