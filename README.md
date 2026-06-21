@@ -6,7 +6,7 @@ A robust and scalable IoT solution for monitoring microclimate environments usin
 
 *   **Backend:** ASP.NET Core Minimal API (.NET 8), C#, Entity Framework Core
 *   **Architecture:** Clean Architecture (Domain, Application, Infrastructure, WebAPI)
-*   **Frontend:** Angular 21+
+*   **Frontend:** Angular 21
 *   **Message Broker:** RabbitMQ
 *   **Database:** MS SQL Server 2022
 *   **Hardware:** ESP32 Microcontrollers (PlatformIO)
