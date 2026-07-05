@@ -21,11 +21,12 @@ services:
     container_name: rabbitmq_server
     environment:
       - RABBITMQ_DEFAULT_USER=iot_admin
-      - RABBITMQ_DEFAULT_PASS=iot_secure_password
+      - RABBITMQ_DEFAULT_PASS=iot_admin
     ports:
       - "5672:5672"   # AMQP protocol port
       - "15672:15672" # Management UI port
       - "1883:1883"   # MQTT protocol port
+    command: [ "sh", "-c", "rabbitmq-plugins enable --offline rabbitmq_mqtt && rabbitmq-server" ]
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     networks:

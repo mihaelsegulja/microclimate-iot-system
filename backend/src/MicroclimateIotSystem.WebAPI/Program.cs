@@ -18,7 +18,9 @@ builder.Services.AddAuthorization();
 
 builder.Services.AddSwagger();
 
+builder.Services.Configure<AppConfig>(builder.Configuration.GetSection("AppConfig"));
 builder.Services.Configure<PerformanceConfig>(builder.Configuration.GetSection("PerformanceConfig"));
+builder.Services.Configure<RabbitMqOptions>(builder.Configuration.GetSection("RabbitMqConfig"));
 
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
