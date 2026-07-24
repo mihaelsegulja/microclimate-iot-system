@@ -1,10 +1,8 @@
 using MicroclimateIotSystem.WebAPI.Abstractions;
 using MicroclimateIotSystem.Application.Configurations;
-using MicroclimateIotSystem.Application.DTOs.Auth;
+using MicroclimateIotSystem.Application.DTOs;
 using MicroclimateIotSystem.Application.Interfaces.Services;
 using MicroclimateIotSystem.Application.Models;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 
@@ -68,7 +66,7 @@ public static class AuthEndpoints
             return TypedResults.Json(StandardResponse<AuthResponseDto>.Create(ResultStatus.Unauthorized, null, "Refresh token is missing."), statusCode: StatusCodes.Status401Unauthorized);
         }
 
-        var response = await authService.RefreshTokenAsync(new RefreshTokenRequestDto { RefreshToken = refreshToken });
+        var response = await authService.RefreshTokenAsync(new RefreshTokenRequestDto(refreshToken));
         
         if (response.Success && response.Data != null)
         {
@@ -88,7 +86,7 @@ public static class AuthEndpoints
             return TypedResults.Json(StandardResponse<bool>.Create(ResultStatus.Unauthorized, false, "Refresh token is missing."), statusCode: StatusCodes.Status401Unauthorized);
         }
 
-        var response = await authService.SignOutAsync(new RefreshTokenRequestDto { RefreshToken = refreshToken });
+        var response = await authService.SignOutAsync(new RefreshTokenRequestDto(refreshToken));
         
         if (response.Success)
         {

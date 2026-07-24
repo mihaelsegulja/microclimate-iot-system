@@ -8,4 +8,7 @@ public class Device : BaseEntity
     public string Name { get; set; }
     public bool IsActive { get; set; }
     public int TelemetryIntervalSeconds { get; set; }
+    public int? RoomId { get; set; }
+    
+    public Room? Room { get; set; }
 }

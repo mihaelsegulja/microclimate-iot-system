@@ -1,12 +1,9 @@
 using MicroclimateIotSystem.Application.Common.Interfaces.Security;
 using MicroclimateIotSystem.Application.Configurations;
+using MicroclimateIotSystem.Application.Interfaces;
 using MicroclimateIotSystem.Application.Interfaces.Common;
 using MicroclimateIotSystem.Application.Interfaces.Queue;
-using MicroclimateIotSystem.Domain.Abstractions;
-using MicroclimateIotSystem.Domain.Interfaces;
-using MicroclimateIotSystem.Infrastructure.Abstractions;
 using MicroclimateIotSystem.Infrastructure.Messaging;
-using MicroclimateIotSystem.Infrastructure.Repositories;
 using MicroclimateIotSystem.Infrastructure.Security.Helpers;
 using MicroclimateIotSystem.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
@@ -29,9 +26,7 @@ public static class DependencyInjection
                     x.EnableRetryOnFailure(maxRetryCount: 5, maxRetryDelay: TimeSpan.FromSeconds(10), errorNumbersToAdd: null);
                 }));
 
-        services.AddScoped(typeof(IBaseRepository<>), typeof(BaseRepository<>));
-        services.AddScoped<IUserRepository, UserRepository>();
-        services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+        services.AddScoped<IAppDbContext>(sp => sp.GetRequiredService<AppDbContext>());
 
         services.AddScoped<IPasswordHelper, PasswordHelper>();
         services.AddScoped<ITokenHelper, TokenHelper>();

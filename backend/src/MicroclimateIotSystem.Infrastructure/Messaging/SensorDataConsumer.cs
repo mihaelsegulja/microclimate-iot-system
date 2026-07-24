@@ -25,33 +25,33 @@ public class SensorDataConsumer : BackgroundService
         _logger = logger;
     }
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
         // TODO: Define queue name and binding keys in configuration
         const string queueName = "sensor_data.ingest";
         const string routingKey = "sensor.reading.*";
 
-        var channel = await _connection.CreateChannelAsync(cancellationToken: stoppingToken);
+        var channel = await _connection.CreateChannelAsync(cancellationToken: cancellationToken);
 
         await channel.ExchangeDeclareAsync(
             exchange: _options.ExchangeName,
             type: ExchangeType.Topic,
             durable: true,
             autoDelete: false,
-            cancellationToken: stoppingToken);
+            cancellationToken: cancellationToken);
 
         await channel.QueueDeclareAsync(
             queue: queueName,
             durable: true,
             exclusive: false,
             autoDelete: false,
-            cancellationToken: stoppingToken);
+            cancellationToken: cancellationToken);
 
         await channel.QueueBindAsync(
             queue: queueName,
             exchange: _options.ExchangeName,
             routingKey: routingKey,
-            cancellationToken: stoppingToken);
+            cancellationToken: cancellationToken);
 
         var consumer = new AsyncEventingBasicConsumer(channel);
         consumer.ReceivedAsync += async (_, eventArgs) =>
@@ -68,14 +68,14 @@ public class SensorDataConsumer : BackgroundService
                 _logger.LogInformation("Received sensor reading: {Message}", message);
 
                 // TODO: Handle processing errors with retry/dead-letter
-                await channel.BasicAckAsync(eventArgs.DeliveryTag, multiple: false, cancellationToken: stoppingToken);
+                await channel.BasicAckAsync(eventArgs.DeliveryTag, multiple: false, cancellationToken: cancellationToken);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error processing sensor reading message");
                 // TODO: Route to dead-letter queue after retries
-                await channel.BasicNackAsync(eventArgs.DeliveryTag, multiple: false, requeue: true, cancellationToken: stoppingToken);
-                await Task.Delay(1000, stoppingToken);
+                await channel.BasicNackAsync(eventArgs.DeliveryTag, multiple: false, requeue: true, cancellationToken: cancellationToken);
+                await Task.Delay(1000, cancellationToken);
             }
         };
 
@@ -83,10 +83,10 @@ public class SensorDataConsumer : BackgroundService
             queue: queueName,
             autoAck: false,
             consumer: consumer,
-            cancellationToken: stoppingToken);
+            cancellationToken: cancellationToken);
 
         _logger.LogInformation("SensorDataConsumer listening on queue: {QueueName}", queueName);
 
-        await Task.Delay(Timeout.Infinite, stoppingToken);
+        await Task.Delay(Timeout.Infinite, cancellationToken);
     }
 }

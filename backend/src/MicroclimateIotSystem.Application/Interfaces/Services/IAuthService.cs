@@ -1,4 +1,4 @@
-using MicroclimateIotSystem.Application.DTOs.Auth;
+using MicroclimateIotSystem.Application.DTOs;
 using MicroclimateIotSystem.Application.Models;
 
 namespace MicroclimateIotSystem.Application.Interfaces.Services;

@@ -1,9 +1,10 @@
+using MicroclimateIotSystem.Application.Interfaces;
 using MicroclimateIotSystem.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace MicroclimateIotSystem.Infrastructure;
 
-public class AppDbContext : DbContext
+public class AppDbContext : DbContext, IAppDbContext
 {
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {
@@ -13,6 +14,7 @@ public class AppDbContext : DbContext
     public DbSet<RefreshToken> RefreshTokens { get; set; }
     public DbSet<Device> Devices { get; set; }
     public DbSet<TelemetryReading> TelemetryReadings { get; set; }
+    public DbSet<Room> Rooms { get; set; }
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -51,16 +53,15 @@ public class AppDbContext : DbContext
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.HardwareId)
-                .HasColumnType("varchar(32)")
+                .HasMaxLength(32)
+                .IsUnicode(false)
                 .IsRequired();
             entity.Property(e => e.Name)
-                .HasColumnType("nvarchar(255)")
+                .HasMaxLength(255)
                 .IsRequired();
             entity.Property(e => e.IsActive)
-                .HasColumnType("bit")
                 .IsRequired();
             entity.Property(e => e.TelemetryIntervalSeconds)
-                .HasColumnType("int")
                 .IsRequired();
         });
 
@@ -68,20 +69,36 @@ public class AppDbContext : DbContext
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.HardwareId)
-                .HasColumnType("varchar(32)")
+                .HasMaxLength(32)
+                .IsUnicode(false)
                 .IsRequired();
             entity.Property(e => e.Timestamp)
                 .HasColumnType("datetime2(0)")
                 .IsRequired();
             entity.Property(e => e.Key)
-                .HasColumnType("varchar(50)")
+                .HasMaxLength(50)
+                .IsUnicode(false)
                 .IsRequired();
             entity.Property(e => e.Value)
                 .HasColumnType("real")
                 .IsRequired();
             entity.Property(e => e.Unit)
-                .HasColumnType("varchar(50)")
+                .HasMaxLength(50)
+                .IsUnicode(false)
                 .IsRequired(false);
+        });
+
+        modelBuilder.Entity<Room>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name)
+                .HasMaxLength(255)
+                .IsRequired();
+            
+            entity.HasMany(r => r.Devices)
+                .WithOne(d => d.Room)
+                .HasForeignKey(d => d.RoomId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
     }
 }

@@ -1,0 +1,2 @@
+namespace MicroclimateIotSystem.Application.DTOs;
+
