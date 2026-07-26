@@ -10,6 +10,7 @@ public interface IAppDbContext
     DbSet<Device> Devices { get; }
     DbSet<TelemetryReading> TelemetryReadings { get; }
     DbSet<Room> Rooms { get; }
+    DbSet<AlertRule> AlertRules { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

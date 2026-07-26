@@ -59,5 +59,8 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapAuthEndpoints();
+app.MapDeviceEndpoints();
+app.MapRoomEndpoints();
+app.MapAlertRuleEndpoints();
 
 app.Run();

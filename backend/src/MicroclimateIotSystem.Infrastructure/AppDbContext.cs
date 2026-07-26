@@ -15,6 +15,7 @@ public class AppDbContext : DbContext, IAppDbContext
     public DbSet<Device> Devices { get; set; }
     public DbSet<TelemetryReading> TelemetryReadings { get; set; }
     public DbSet<Room> Rooms { get; set; }
+    public DbSet<AlertRule> AlertRules { get; set; }
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -99,6 +100,33 @@ public class AppDbContext : DbContext, IAppDbContext
                 .WithOne(d => d.Room)
                 .HasForeignKey(d => d.RoomId)
                 .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<AlertRule>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name)
+                .HasMaxLength(255)
+                .IsRequired();
+            entity.Property(e => e.TelemetryKey)
+                .HasMaxLength(50)
+                .IsUnicode(false)
+                .IsRequired();
+            entity.Property(e => e.ThresholdValue)
+                .HasColumnType("real")
+                .IsRequired();
+            entity.Property(e => e.Operator)
+                .IsRequired();
+            
+            entity.HasOne(e => e.Room)
+                .WithMany()
+                .HasForeignKey(e => e.RoomId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Device)
+                .WithMany()
+                .HasForeignKey(e => e.DeviceId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

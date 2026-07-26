@@ -10,35 +10,25 @@ using Microsoft.Extensions.Options;
 
 namespace MicroclimateIotSystem.Application.Services;
 
-public class AuthService : IAuthService
+public class AuthService(
+    IAppDbContext db,
+    IPasswordHelper passwordHelper,
+    ITokenHelper tokenHelper,
+    IOptions<JwtConfig> jwtConfig)
+    : IAuthService
 {
-    private readonly IAppDbContext _db;
-    private readonly IPasswordHelper _passwordHelper;
-    private readonly ITokenHelper _tokenHelper;
-    private readonly JwtConfig _jwtConfig;
-
-    public AuthService(
-        IAppDbContext db,
-        IPasswordHelper passwordHelper,
-        ITokenHelper tokenHelper,
-        IOptions<JwtConfig> jwtConfig)
-    {
-        _db = db;
-        _passwordHelper = passwordHelper;
-        _tokenHelper = tokenHelper;
-        _jwtConfig = jwtConfig.Value;
-    }
+    private readonly JwtConfig _jwtConfig = jwtConfig.Value;
 
     public async Task<StandardResponse<AuthResponseDto>> LoginAsync(LoginRequestDto request)
     {
-        var user = await _db.Users
+        var user = await db.Users
             .FirstOrDefaultAsync(u => u.Username == request.Username);
 
-        if (user == null || !_passwordHelper.VerifyPassword(request.Password, user.PasswordHash))
+        if (user == null || !passwordHelper.VerifyPassword(request.Password, user.PasswordHash))
             return StandardResponse<AuthResponseDto>.Create(ResultStatus.Unauthorized, message: "Invalid username or password.");
 
-        var accessToken = _tokenHelper.GenerateAccessToken(user);
-        var refreshToken = _tokenHelper.GenerateRefreshToken();
+        var accessToken = tokenHelper.GenerateAccessToken(user);
+        var refreshToken = tokenHelper.GenerateRefreshToken();
 
         user.RefreshTokens.Add(new RefreshToken
         {
@@ -47,7 +37,7 @@ public class AuthService : IAuthService
             Created = DateTime.UtcNow
         });
 
-        await _db.SaveChangesAsync();
+        await db.SaveChangesAsync();
 
         var responseData = new AuthResponseDto(accessToken, refreshToken);
 
@@ -56,14 +46,14 @@ public class AuthService : IAuthService
 
     public async Task<StandardResponse<AuthResponseDto>> RegisterAsync(RegisterRequestDto request)
     {
-        var existingUser = await _db.Users
+        var existingUser = await db.Users
             .FirstOrDefaultAsync(u => u.Username == request.Username);
 
         if (existingUser != null)
             return StandardResponse<AuthResponseDto>.Create(ResultStatus.Conflict, message: "User already exists.");
 
-        var salt = _passwordHelper.GenerateSalt();
-        var hash = _passwordHelper.HashPassword(request.Password, salt);
+        var salt = passwordHelper.GenerateSalt();
+        var hash = passwordHelper.HashPassword(request.Password, salt);
 
         var newUser = new User
         {
@@ -72,11 +62,11 @@ public class AuthService : IAuthService
             PasswordSalt = salt
         };
 
-        _db.Users.Add(newUser);
-        await _db.SaveChangesAsync();
+        db.Users.Add(newUser);
+        await db.SaveChangesAsync();
 
-        var accessToken = _tokenHelper.GenerateAccessToken(newUser);
-        var refreshToken = _tokenHelper.GenerateRefreshToken();
+        var accessToken = tokenHelper.GenerateAccessToken(newUser);
+        var refreshToken = tokenHelper.GenerateRefreshToken();
 
         newUser.RefreshTokens.Add(new RefreshToken
         {
@@ -85,7 +75,7 @@ public class AuthService : IAuthService
             Created = DateTime.UtcNow
         });
 
-        await _db.SaveChangesAsync();
+        await db.SaveChangesAsync();
 
         var responseData = new AuthResponseDto(accessToken, refreshToken);
 
@@ -94,7 +84,7 @@ public class AuthService : IAuthService
 
     public async Task<StandardResponse<AuthResponseDto>> RefreshTokenAsync(RefreshTokenRequestDto request)
     {
-        var existingToken = await _db.RefreshTokens
+        var existingToken = await db.RefreshTokens
             .Include(rt => rt.User)
             .FirstOrDefaultAsync(rt => rt.Token == request.RefreshToken);
 
@@ -105,8 +95,8 @@ public class AuthService : IAuthService
 
         existingToken.Revoked = DateTime.UtcNow;
 
-        var newAccessToken = _tokenHelper.GenerateAccessToken(user);
-        var newRefreshToken = _tokenHelper.GenerateRefreshToken();
+        var newAccessToken = tokenHelper.GenerateAccessToken(user);
+        var newRefreshToken = tokenHelper.GenerateRefreshToken();
 
         user.RefreshTokens.Add(new RefreshToken
         {
@@ -115,7 +105,7 @@ public class AuthService : IAuthService
             Created = DateTime.UtcNow
         });
 
-        await _db.SaveChangesAsync();
+        await db.SaveChangesAsync();
 
         var responseData = new AuthResponseDto(newAccessToken, newRefreshToken);
 
@@ -124,7 +114,7 @@ public class AuthService : IAuthService
 
     public async Task<StandardResponse<bool>> SignOutAsync(RefreshTokenRequestDto request)
     {
-        var existingToken = await _db.RefreshTokens
+        var existingToken = await db.RefreshTokens
             .FirstOrDefaultAsync(rt => rt.Token == request.RefreshToken);
 
         if (existingToken == null)
@@ -134,7 +124,7 @@ public class AuthService : IAuthService
             return StandardResponse<bool>.Create(ResultStatus.Conflict, false, "Token is already revoked.");
 
         existingToken.Revoked = DateTime.UtcNow;
-        await _db.SaveChangesAsync();
+        await db.SaveChangesAsync();
 
         return StandardResponse<bool>.Create(ResultStatus.Ok, true, "Signed out successfully.");
     }
