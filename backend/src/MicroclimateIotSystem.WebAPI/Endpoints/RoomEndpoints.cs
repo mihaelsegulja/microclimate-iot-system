@@ -36,7 +36,8 @@ public static class RoomEndpoints
     private static async Task<IResult> GetLookupAsync(
         [AsParameters] LookupPagingQueryParams paging,
         [FromQuery] string? filters,
-        IRoomService roomService)
+        IRoomService roomService,
+        CancellationToken cancellationToken)
     {
         FilterQueryParams? filterParams = null;
         if (!string.IsNullOrWhiteSpace(filters))
@@ -46,14 +47,15 @@ public static class RoomEndpoints
                 filterParams = new FilterQueryParams(rules);
         }
 
-        var response = await roomService.GetRoomsLookupAsync(paging, filterParams);
+        var response = await roomService.GetRoomsLookupAsync(paging, filterParams, cancellationToken);
         return ResultHandler.Handle(response);
     }
 
     private static async Task<IResult> GetAllAsync(
         [AsParameters] PagingQueryParams paging,
         [FromQuery] string? filters,
-        IRoomService roomService)
+        IRoomService roomService,
+        CancellationToken cancellationToken)
     {
         FilterQueryParams? filterParams = null;
         if (!string.IsNullOrWhiteSpace(filters))
@@ -63,15 +65,16 @@ public static class RoomEndpoints
                 filterParams = new FilterQueryParams(rules);
         }
 
-        var response = await roomService.GetRoomsAsync(paging, filterParams);
+        var response = await roomService.GetRoomsAsync(paging, filterParams, cancellationToken);
         return ResultHandler.Handle(response);
     }
 
     private static async Task<IResult> GetByIdAsync(
         int id,
-        IRoomService roomService)
+        IRoomService roomService,
+        CancellationToken cancellationToken)
     {
-        var response = await roomService.GetRoomByIdAsync(id);
+        var response = await roomService.GetRoomByIdAsync(id, cancellationToken);
         return ResultHandler.Handle(response);
     }
 
@@ -79,7 +82,8 @@ public static class RoomEndpoints
         int id,
         [AsParameters] PagingQueryParams paging,
         [FromQuery] string? filters,
-        IRoomService roomService)
+        IRoomService roomService,
+        CancellationToken cancellationToken)
     {
         FilterQueryParams? filterParams = null;
         if (!string.IsNullOrWhiteSpace(filters))
@@ -89,50 +93,55 @@ public static class RoomEndpoints
                 filterParams = new FilterQueryParams(rules);
         }
 
-        var response = await roomService.GetRoomDevicesAsync(id, paging, filterParams);
+        var response = await roomService.GetRoomDevicesAsync(id, paging, filterParams, cancellationToken);
         return ResultHandler.Handle(response);
     }
 
     private static async Task<IResult> CreateAsync(
         [FromBody] CreateRoomRequestDto request,
-        IRoomService roomService)
+        IRoomService roomService,
+        CancellationToken cancellationToken)
     {
-        var response = await roomService.CreateRoomAsync(request);
+        var response = await roomService.CreateRoomAsync(request, cancellationToken);
         return ResultHandler.Handle(response);
     }
 
     private static async Task<IResult> UpdateAsync(
         int id,
         [FromBody] UpdateRoomRequestDto request,
-        IRoomService roomService)
+        IRoomService roomService,
+        CancellationToken cancellationToken)
     {
-        var response = await roomService.UpdateRoomAsync(id, request);
+        var response = await roomService.UpdateRoomAsync(id, request, cancellationToken);
         return ResultHandler.Handle(response);
     }
 
     private static async Task<IResult> DeleteAsync(
         int id,
-        IRoomService roomService)
+        IRoomService roomService,
+        CancellationToken cancellationToken)
     {
-        var response = await roomService.DeleteRoomAsync(id);
+        var response = await roomService.DeleteRoomAsync(id, cancellationToken);
         return ResultHandler.Handle(response);
     }
 
     private static async Task<IResult> AssignDevicesAsync(
         int id,
         [FromBody] AssignDevicesRequestDto request,
-        IRoomService roomService)
+        IRoomService roomService,
+        CancellationToken cancellationToken)
     {
-        var response = await roomService.AssignDevicesToRoomAsync(id, request);
+        var response = await roomService.AssignDevicesToRoomAsync(id, request, cancellationToken);
         return ResultHandler.Handle(response);
     }
 
     private static async Task<IResult> ToggleActiveAsync(
         int id,
         [FromBody] ToggleActiveRequestDto request,
-        IRoomService roomService)
+        IRoomService roomService,
+        CancellationToken cancellationToken)
     {
-        var response = await roomService.ToggleRoomActiveAsync(id, request.IsActive);
+        var response = await roomService.ToggleRoomActiveAsync(id, request.IsActive, cancellationToken);
         return ResultHandler.Handle(response);
     }
 }

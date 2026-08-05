@@ -1,6 +1,6 @@
 namespace MicroclimateIotSystem.Application.Configurations;
 
-public class DeviceConfig
+public class DeviceOptions
 {
     public int TelemetryIntervalSeconds { get; set; }
 }

@@ -87,6 +87,7 @@ public class AppDbContext : DbContext, IAppDbContext
                 .HasMaxLength(50)
                 .IsUnicode(false)
                 .IsRequired(false);
+            entity.HasIndex(e => new { e.HardwareId, e.Timestamp });
         });
 
         modelBuilder.Entity<Room>(entity =>

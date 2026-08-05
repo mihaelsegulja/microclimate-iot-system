@@ -12,16 +12,16 @@ namespace MicroclimateIotSystem.Infrastructure.Security.Helpers;
 
 public class TokenHelper : ITokenHelper
 {
-    private readonly JwtConfig _jwtConfig;
+    private readonly JwtOptions _jwtOptions;
 
-    public TokenHelper(JwtConfig jwtConfig)
+    public TokenHelper(JwtOptions jwtOptions)
     {
-        _jwtConfig = jwtConfig;
+        _jwtOptions = jwtOptions;
     }
 
     public string GenerateAccessToken(User user)
     {
-        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtConfig.Key));
+        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtOptions.Key));
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
         var claims = new[]
@@ -34,10 +34,10 @@ public class TokenHelper : ITokenHelper
         };
 
         var token = new JwtSecurityToken(
-            issuer: _jwtConfig.Issuer,
-            audience: _jwtConfig.Audience,
+            issuer: _jwtOptions.Issuer,
+            audience: _jwtOptions.Audience,
             claims: claims,
-            expires: DateTime.UtcNow.AddMinutes(_jwtConfig.AccessTokenExpirationInMinutes),
+            expires: DateTime.UtcNow.AddMinutes(_jwtOptions.AccessTokenExpirationInMinutes),
             signingCredentials: credentials);
 
         return new JwtSecurityTokenHandler().WriteToken(token);

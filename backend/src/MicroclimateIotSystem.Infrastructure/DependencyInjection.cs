@@ -3,10 +3,12 @@ using MicroclimateIotSystem.Application.Configurations;
 using MicroclimateIotSystem.Application.Interfaces;
 using MicroclimateIotSystem.Application.Interfaces.Common;
 using MicroclimateIotSystem.Application.Interfaces.Queue;
+using MicroclimateIotSystem.Infrastructure.Caching;
 using MicroclimateIotSystem.Infrastructure.Messaging;
 using MicroclimateIotSystem.Infrastructure.Security.Helpers;
 using MicroclimateIotSystem.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using RabbitMQ.Client;
@@ -19,8 +21,8 @@ public static class DependencyInjection
     {
         services.AddDbContext<AppDbContext>(options =>
             options.UseSqlServer(
-                configuration.GetConnectionString("Db"), 
-                x => 
+                configuration.GetConnectionString("Db"),
+                x =>
                 {
                     x.MigrationsAssembly("MicroclimateIotSystem.Infrastructure");
                     x.EnableRetryOnFailure(maxRetryCount: 5, maxRetryDelay: TimeSpan.FromSeconds(10), errorNumbersToAdd: null);
@@ -28,11 +30,13 @@ public static class DependencyInjection
 
         services.AddScoped<IAppDbContext>(sp => sp.GetRequiredService<AppDbContext>());
 
+        services.AddMemoryCache();
+        services.AddSingleton<ICacheService, CacheService>();
+
         services.AddScoped<IPasswordHelper, PasswordHelper>();
         services.AddScoped<ITokenHelper, TokenHelper>();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
 
-        // TODO: Extract to a separate AddMessageBroker extension method
         services.AddSingleton<IConnection>(sp =>
         {
             var options = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<RabbitMqOptions>>().Value;
@@ -46,13 +50,15 @@ public static class DependencyInjection
                 AutomaticRecoveryEnabled = true,
                 NetworkRecoveryInterval = TimeSpan.FromSeconds(10)
             };
-            // TODO: Handle connection failure gracefully with retry policy
             return factory.CreateConnectionAsync().GetAwaiter().GetResult();
         });
 
         services.AddSingleton<IMessageQueuePublisher, RabbitMqPublisher>();
-        // TODO: Register more consumers as hosted services when needed
-        services.AddHostedService<SensorDataConsumer>();
+
+        services.AddScoped<ISensorDataProcessor, SensorDataProcessor>();
+
+        services.AddHostedService<RabbitMqTopologyInitializer>();
+        services.AddHostedService<TelemetryConsumerHostedService>();
 
         return services;
     }

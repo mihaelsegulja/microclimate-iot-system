@@ -1,17 +1,20 @@
+using MicroclimateIotSystem.Application.Constants;
 using MicroclimateIotSystem.Application.DTOs;
 using MicroclimateIotSystem.Application.Extensions;
 using MicroclimateIotSystem.Application.Interfaces;
+using MicroclimateIotSystem.Application.Interfaces.Queue;
 using MicroclimateIotSystem.Application.Interfaces.Services;
 using MicroclimateIotSystem.Application.Models;
+using MicroclimateIotSystem.Application.Models.Messaging;
 using MicroclimateIotSystem.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace MicroclimateIotSystem.Application.Services;
 
-public class DeviceService(IAppDbContext db) : IDeviceService
+public class DeviceService(IAppDbContext db, IMessageQueuePublisher publisher, ICacheService cache) : IDeviceService
 {
     public async Task<PaginatedResponse<DeviceResponseDto>> GetDevicesAsync(
-        PagingQueryParams paging, FilterQueryParams? filters)
+        PagingQueryParams paging, FilterQueryParams? filters, CancellationToken cancellationToken = default)
     {
         return await db.Devices
             .AsNoTracking()
@@ -25,10 +28,11 @@ public class DeviceService(IAppDbContext db) : IDeviceService
                 d.Room.Name
             ))
             .ApplyFilters(filters?.FilterRules)
-            .ToPaginatedResponseAsync(paging);
+            .ToPaginatedResponseAsync(paging, cancellationToken);
     }
 
-    public async Task<StandardResponse<DeviceResponseDto>> GetDeviceByIdAsync(int id)
+    public async Task<StandardResponse<DeviceResponseDto>> GetDeviceByIdAsync(
+        int id, CancellationToken cancellationToken = default)
     {
         var dto = await db.Devices
             .AsNoTracking()
@@ -42,7 +46,7 @@ public class DeviceService(IAppDbContext db) : IDeviceService
                 d.RoomId,
                 d.Room.Name
             ))
-            .FirstOrDefaultAsync();
+            .FirstOrDefaultAsync(cancellationToken);
 
         if (dto == null)
             return StandardResponse<DeviceResponseDto>.NotFound($"Device with id {id} not found.");
@@ -50,9 +54,10 @@ public class DeviceService(IAppDbContext db) : IDeviceService
         return StandardResponse<DeviceResponseDto>.SuccessOk(dto);
     }
 
-    public async Task<StandardResponse<int>> CreateDeviceAsync(CreateDeviceRequestDto request)
+    public async Task<StandardResponse<int>> CreateDeviceAsync(
+        CreateDeviceRequestDto request, CancellationToken cancellationToken = default)
     {
-        var exists = await db.Devices.AnyAsync(d => d.HardwareId == request.HardwareId);
+        var exists = await db.Devices.AnyAsync(d => d.HardwareId == request.HardwareId, cancellationToken);
         if (exists)
             return StandardResponse<int>.Failure(ResultStatus.Conflict, $"Device with HardwareId '{request.HardwareId}' already exists.");
 
@@ -66,20 +71,21 @@ public class DeviceService(IAppDbContext db) : IDeviceService
         };
 
         db.Devices.Add(device);
-        await db.SaveChangesAsync();
+        await db.SaveChangesAsync(cancellationToken);
 
         return StandardResponse<int>.SuccessCreated(device.Id, "Device created successfully.");
     }
 
-    public async Task<StandardResponse<bool>> UpdateDeviceAsync(int id, UpdateDeviceRequestDto request)
+    public async Task<StandardResponse<bool>> UpdateDeviceAsync(
+        int id, UpdateDeviceRequestDto request, CancellationToken cancellationToken = default)
     {
-        var device = await db.Devices.FirstOrDefaultAsync(d => d.Id == id);
+        var device = await db.Devices.FirstOrDefaultAsync(d => d.Id == id, cancellationToken);
         if (device == null)
             return StandardResponse<bool>.NotFound($"Device with id {id} not found.");
 
         if (!string.Equals(device.HardwareId, request.HardwareId, StringComparison.OrdinalIgnoreCase))
         {
-            var duplicate = await db.Devices.AnyAsync(d => d.HardwareId == request.HardwareId);
+            var duplicate = await db.Devices.AnyAsync(d => d.HardwareId == request.HardwareId, cancellationToken);
             if (duplicate)
                 return StandardResponse<bool>.Failure(ResultStatus.Conflict, $"HardwareId '{request.HardwareId}' is already in use.");
         }
@@ -90,25 +96,32 @@ public class DeviceService(IAppDbContext db) : IDeviceService
         device.TelemetryIntervalSeconds = request.TelemetryIntervalSeconds;
         device.RoomId = request.RoomId;
 
-        await db.SaveChangesAsync();
+        await db.SaveChangesAsync(cancellationToken);
+
+        cache.Remove(CacheKeys.DeviceActive(device.HardwareId));
+        cache.Remove(CacheKeys.DeviceActive(request.HardwareId));
 
         return StandardResponse<bool>.SuccessOk(true, "Device updated successfully.");
     }
 
-    public async Task<StandardResponse<bool>> DeleteDeviceAsync(int id)
+    public async Task<StandardResponse<bool>> DeleteDeviceAsync(
+        int id, CancellationToken cancellationToken = default)
     {
-        var device = await db.Devices.FirstOrDefaultAsync(d => d.Id == id);
+        var device = await db.Devices.FirstOrDefaultAsync(d => d.Id == id, cancellationToken);
         if (device == null)
             return StandardResponse<bool>.NotFound($"Device with id {id} not found.");
 
         db.Devices.Remove(device);
-        await db.SaveChangesAsync();
+        await db.SaveChangesAsync(cancellationToken);
+
+        cache.Remove(CacheKeys.DeviceActive(device.HardwareId));
 
         return StandardResponse<bool>.SuccessOk(true, "Device deleted successfully.");
     }
 
     public async Task<PaginatedResponse<LookupItemDto>> GetDevicesLookupAsync(
-        LookupPagingQueryParams paging, FilterQueryParams? filters, bool? available = null)
+        LookupPagingQueryParams paging, FilterQueryParams? filters, bool? available = null,
+        CancellationToken cancellationToken = default)
     {
         var query = db.Devices.AsNoTracking();
 
@@ -118,18 +131,42 @@ public class DeviceService(IAppDbContext db) : IDeviceService
         return await query
             .Select(d => new LookupItemDto(d.Id, d.Name, d.IsActive))
             .ApplyFilters(filters?.FilterRules)
-            .ToPaginatedResponseAsync(new PagingQueryParams(paging.Page, paging.PageSize));
+            .ToPaginatedResponseAsync(new PagingQueryParams(paging.Page, paging.PageSize), cancellationToken);
     }
 
-    public async Task<StandardResponse<bool>> ToggleDeviceActiveAsync(int id, bool isActive)
+    public async Task<StandardResponse<bool>> ToggleDeviceActiveAsync(
+        int id, bool isActive, CancellationToken cancellationToken = default)
     {
-        var device = await db.Devices.FirstOrDefaultAsync(d => d.Id == id);
+        var device = await db.Devices.FirstOrDefaultAsync(d => d.Id == id, cancellationToken);
         if (device == null)
             return StandardResponse<bool>.NotFound($"Device with id {id} not found.");
 
         device.IsActive = isActive;
-        await db.SaveChangesAsync();
+        await db.SaveChangesAsync(cancellationToken);
+
+        cache.Remove(CacheKeys.DeviceActive(device.HardwareId));
 
         return StandardResponse<bool>.SuccessOk(true, isActive ? "Device activated." : "Device deactivated.");
+    }
+
+    public async Task<StandardResponse<bool>> SendDeviceConfigAsync(
+        int id, object config, CancellationToken cancellationToken = default)
+    {
+        var device = await db.Devices.AsNoTracking().FirstOrDefaultAsync(d => d.Id == id, cancellationToken);
+        if (device == null)
+            return StandardResponse<bool>.NotFound($"Device with id {id} not found.");
+
+        var command = new DeviceCommandMessage(
+            CommandId: Guid.NewGuid().ToString(),
+            HardwareId: device.HardwareId,
+            CommandType: "UPDATE_CONFIG",
+            SentAt: DateTime.UtcNow,
+            Payload: config
+        );
+
+        var routingKey = $"devices.{device.HardwareId}.commands";
+        await publisher.PublishAsync(routingKey, command);
+
+        return StandardResponse<bool>.SuccessOk(true, "Configuration command sent to device.");
     }
 }

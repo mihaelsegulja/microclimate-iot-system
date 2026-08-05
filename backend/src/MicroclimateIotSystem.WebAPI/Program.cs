@@ -18,9 +18,23 @@ builder.Services.AddAuthorization();
 
 builder.Services.AddSwagger();
 
-builder.Services.Configure<AppConfig>(builder.Configuration.GetSection("AppConfig"));
-builder.Services.Configure<PerformanceConfig>(builder.Configuration.GetSection("PerformanceConfig"));
-builder.Services.Configure<RabbitMqOptions>(builder.Configuration.GetSection("RabbitMqConfig"));
+builder.Services.Configure<AppOptions>(builder.Configuration.GetSection("AppOptions"));
+builder.Services.Configure<PerformanceOptions>(builder.Configuration.GetSection("PerformanceOptions"));
+builder.Services.Configure<RabbitMqOptions>(builder.Configuration.GetSection("RabbitMqOptions"));
+builder.Services.Configure<CorsOptions>(builder.Configuration.GetSection("CorsOptions"));
+
+var corsOptions = builder.Configuration.GetSection("CorsOptions").Get<CorsOptions>();
+
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.WithOrigins(corsOptions!.AllowedOrigins.ToArray())
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
+});
 
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
@@ -41,6 +55,8 @@ builder.Services.AddEndpointsApiExplorer();
 var app = builder.Build();
 
 app.UseExceptionHandler();
+
+app.UseCors();
 
 app.UseMiddleware<PerformanceLogMiddleware>();
 

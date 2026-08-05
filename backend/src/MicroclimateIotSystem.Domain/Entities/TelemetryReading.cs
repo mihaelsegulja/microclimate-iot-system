@@ -1,5 +1,3 @@
-using MicroclimateIotSystem.Domain.Abstractions;
-
 namespace MicroclimateIotSystem.Domain.Entities;
 
 public class TelemetryReading

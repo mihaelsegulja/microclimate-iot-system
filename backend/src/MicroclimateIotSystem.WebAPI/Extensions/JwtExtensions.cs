@@ -9,11 +9,11 @@ public static class JwtExtensions
 {
     public static IServiceCollection AddJwtAuthentication(this IServiceCollection services, IConfiguration configuration)
     {
-        var jwtSection = configuration.GetSection("JwtConfig");
-        var jwtConf = jwtSection.Get<JwtConfig>();
+        var jwtSection = configuration.GetSection("JwtOptions");
+        var jwtOptions = jwtSection.Get<JwtOptions>();
         
-        services.Configure<JwtConfig>(jwtSection);
-        services.AddSingleton(jwtConf!);
+        services.Configure<JwtOptions>(jwtSection);
+        services.AddSingleton(jwtOptions!);
 
         services.AddAuthentication(options =>
             {
@@ -28,9 +28,9 @@ public static class JwtExtensions
                     ValidateAudience = true,
                     ValidateLifetime = true,
                     ValidateIssuerSigningKey = true,
-                    ValidIssuer = jwtConf!.Issuer,
-                    ValidAudience = jwtConf.Audience,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtConf.Key)),
+                    ValidIssuer = jwtOptions!.Issuer,
+                    ValidAudience = jwtOptions.Audience,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.Key)),
                     ClockSkew = TimeSpan.Zero
                 };
             });

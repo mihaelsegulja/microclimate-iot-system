@@ -26,14 +26,15 @@ public static class AuthEndpoints
     private static async Task<IResult> LoginAsync(
         [FromBody] LoginRequestDto request,
         IAuthService authService,
-        IOptions<JwtConfig> jwtConfig,
-        HttpContext httpContext)
+        IOptions<JwtOptions> jwtOptions,
+        HttpContext httpContext,
+        CancellationToken cancellationToken)
     {
-        var response = await authService.LoginAsync(request);
+        var response = await authService.LoginAsync(request, cancellationToken);
         
         if (response.Success && response.Data != null)
         {
-            SetRefreshTokenCookie(httpContext.Response, response.Data.RefreshToken, jwtConfig.Value.RefreshTokenExpirationInMinutes);
+            SetRefreshTokenCookie(httpContext.Response, response.Data.RefreshToken, jwtOptions.Value.RefreshTokenExpirationInMinutes);
         }
 
         return ResultHandler.Handle(response);
@@ -42,14 +43,15 @@ public static class AuthEndpoints
     private static async Task<IResult> RegisterAsync(
         [FromBody] RegisterRequestDto request,
         IAuthService authService,
-        IOptions<JwtConfig> jwtConfig,
-        HttpContext httpContext)
+        IOptions<JwtOptions> jwtOptions,
+        HttpContext httpContext,
+        CancellationToken cancellationToken)
     {
-        var response = await authService.RegisterAsync(request);
+        var response = await authService.RegisterAsync(request, cancellationToken);
         
         if (response.Success && response.Data != null)
         {
-            SetRefreshTokenCookie(httpContext.Response, response.Data.RefreshToken, jwtConfig.Value.RefreshTokenExpirationInMinutes);
+            SetRefreshTokenCookie(httpContext.Response, response.Data.RefreshToken, jwtOptions.Value.RefreshTokenExpirationInMinutes);
         }
 
         return ResultHandler.Handle(response);
@@ -57,8 +59,9 @@ public static class AuthEndpoints
 
     private static async Task<IResult> RefreshTokenAsync(
         IAuthService authService,
-        IOptions<JwtConfig> jwtConfig,
-        HttpContext httpContext)
+        IOptions<JwtOptions> jwtOptions,
+        HttpContext httpContext,
+        CancellationToken cancellationToken)
     {
         var refreshToken = httpContext.Request.Cookies["refreshToken"];
         if (string.IsNullOrEmpty(refreshToken))
@@ -66,11 +69,11 @@ public static class AuthEndpoints
             return TypedResults.Json(StandardResponse<AuthResponseDto>.Create(ResultStatus.Unauthorized, null, "Refresh token is missing."), statusCode: StatusCodes.Status401Unauthorized);
         }
 
-        var response = await authService.RefreshTokenAsync(new RefreshTokenRequestDto(refreshToken));
+        var response = await authService.RefreshTokenAsync(new RefreshTokenRequestDto(refreshToken), cancellationToken);
         
         if (response.Success && response.Data != null)
         {
-            SetRefreshTokenCookie(httpContext.Response, response.Data.RefreshToken, jwtConfig.Value.RefreshTokenExpirationInMinutes);
+            SetRefreshTokenCookie(httpContext.Response, response.Data.RefreshToken, jwtOptions.Value.RefreshTokenExpirationInMinutes);
         }
 
         return ResultHandler.Handle(response);
@@ -78,7 +81,8 @@ public static class AuthEndpoints
 
     private static async Task<IResult> SignoutAsync(
         IAuthService authService,
-        HttpContext httpContext)
+        HttpContext httpContext,
+        CancellationToken cancellationToken)
     {
         var refreshToken = httpContext.Request.Cookies["refreshToken"];
         if (string.IsNullOrEmpty(refreshToken))
@@ -86,7 +90,7 @@ public static class AuthEndpoints
             return TypedResults.Json(StandardResponse<bool>.Create(ResultStatus.Unauthorized, false, "Refresh token is missing."), statusCode: StatusCodes.Status401Unauthorized);
         }
 
-        var response = await authService.SignOutAsync(new RefreshTokenRequestDto(refreshToken));
+        var response = await authService.SignOutAsync(new RefreshTokenRequestDto(refreshToken), cancellationToken);
         
         if (response.Success)
         {

@@ -32,7 +32,8 @@ public static class AlertRuleEndpoints
     private static async Task<IResult> GetAllAsync(
         [AsParameters] PagingQueryParams paging,
         [FromQuery] string? filters,
-        IAlertRuleService alertRuleService)
+        IAlertRuleService alertRuleService,
+        CancellationToken cancellationToken)
     {
         FilterQueryParams? filterParams = null;
         if (!string.IsNullOrWhiteSpace(filters))
@@ -42,40 +43,44 @@ public static class AlertRuleEndpoints
                 filterParams = new FilterQueryParams(rules);
         }
 
-        var response = await alertRuleService.GetAlertRulesAsync(paging, filterParams);
+        var response = await alertRuleService.GetAlertRulesAsync(paging, filterParams, cancellationToken);
         return ResultHandler.Handle(response);
     }
 
     private static async Task<IResult> GetByIdAsync(
         int id,
-        IAlertRuleService alertRuleService)
+        IAlertRuleService alertRuleService,
+        CancellationToken cancellationToken)
     {
-        var response = await alertRuleService.GetAlertRuleByIdAsync(id);
+        var response = await alertRuleService.GetAlertRuleByIdAsync(id, cancellationToken);
         return ResultHandler.Handle(response);
     }
 
     private static async Task<IResult> CreateAsync(
         [FromBody] CreateAlertRuleRequestDto request,
-        IAlertRuleService alertRuleService)
+        IAlertRuleService alertRuleService,
+        CancellationToken cancellationToken)
     {
-        var response = await alertRuleService.CreateAlertRuleAsync(request);
+        var response = await alertRuleService.CreateAlertRuleAsync(request, cancellationToken);
         return ResultHandler.Handle(response);
     }
 
     private static async Task<IResult> ToggleActiveAsync(
         int id,
         [FromBody] ToggleActiveRequestDto request,
-        IAlertRuleService alertRuleService)
+        IAlertRuleService alertRuleService,
+        CancellationToken cancellationToken)
     {
-        var response = await alertRuleService.ToggleAlertRuleActiveAsync(id, request.IsActive);
+        var response = await alertRuleService.ToggleAlertRuleActiveAsync(id, request.IsActive, cancellationToken);
         return ResultHandler.Handle(response);
     }
 
     private static async Task<IResult> DeleteAsync(
         int id,
-        IAlertRuleService alertRuleService)
+        IAlertRuleService alertRuleService,
+        CancellationToken cancellationToken)
     {
-        var response = await alertRuleService.DeleteAlertRuleAsync(id);
+        var response = await alertRuleService.DeleteAlertRuleAsync(id, cancellationToken);
         return ResultHandler.Handle(response);
     }
 }

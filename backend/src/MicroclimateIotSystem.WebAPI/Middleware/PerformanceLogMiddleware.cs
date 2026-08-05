@@ -8,9 +8,9 @@ public class PerformanceLogMiddleware
 {
     private readonly RequestDelegate _next;
     private readonly ILogger<PerformanceLogMiddleware> _logger;
-    private readonly PerformanceConfig _options;
+    private readonly PerformanceOptions _options;
     
-    public PerformanceLogMiddleware(RequestDelegate next, ILogger<PerformanceLogMiddleware> logger,  IOptions<PerformanceConfig> options)
+    public PerformanceLogMiddleware(RequestDelegate next, ILogger<PerformanceLogMiddleware> logger,  IOptions<PerformanceOptions> options)
     {
         _next = next;
         _logger = logger;

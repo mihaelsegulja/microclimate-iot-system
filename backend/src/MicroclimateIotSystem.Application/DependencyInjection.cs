@@ -12,6 +12,7 @@ public static class DependencyInjection
         services.AddScoped<IDeviceService, DeviceService>();
         services.AddScoped<IRoomService, RoomService>();
         services.AddScoped<IAlertRuleService, AlertRuleService>();
+        services.AddScoped<ITelemetryService, TelemetryService>();
         return services;
     }
 }

@@ -1,6 +1,6 @@
 namespace MicroclimateIotSystem.Application.Configurations;
 
-public class PerformanceConfig
+public class PerformanceOptions
 {
     public int WarningThresholdInMilliseconds { get; set; }
 }

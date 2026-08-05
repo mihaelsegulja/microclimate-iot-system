@@ -1,6 +1,6 @@
 namespace MicroclimateIotSystem.Application.Configurations;
 
-public class AppConfig
+public class AppOptions
 {
     public int DefaultPageSize { get; set; }
 }

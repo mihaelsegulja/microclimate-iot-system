@@ -11,7 +11,7 @@ namespace MicroclimateIotSystem.Application.Services;
 public class RoomService(IAppDbContext db) : IRoomService
 {
     public async Task<PaginatedResponse<RoomResponseDto>> GetRoomsAsync(
-        PagingQueryParams paging, FilterQueryParams? filters)
+        PagingQueryParams paging, FilterQueryParams? filters, CancellationToken cancellationToken = default)
     {
         return await db.Rooms
             .AsNoTracking()
@@ -23,10 +23,11 @@ public class RoomService(IAppDbContext db) : IRoomService
                 r.Devices.Count()
             ))
             .ApplyFilters(filters?.FilterRules)
-            .ToPaginatedResponseAsync(paging);
+            .ToPaginatedResponseAsync(paging, cancellationToken);
     }
 
-    public async Task<StandardResponse<RoomResponseDto>> GetRoomByIdAsync(int id)
+    public async Task<StandardResponse<RoomResponseDto>> GetRoomByIdAsync(
+        int id, CancellationToken cancellationToken = default)
     {
         var dto = await db.Rooms
             .AsNoTracking()
@@ -38,7 +39,7 @@ public class RoomService(IAppDbContext db) : IRoomService
                 r.IsActive,
                 r.Devices.Count()
             ))
-            .FirstOrDefaultAsync();
+            .FirstOrDefaultAsync(cancellationToken);
 
         if (dto == null)
             return StandardResponse<RoomResponseDto>.NotFound($"Room with id {id} not found.");
@@ -47,9 +48,10 @@ public class RoomService(IAppDbContext db) : IRoomService
     }
 
     public async Task<PaginatedResponse<DeviceItemDto>> GetRoomDevicesAsync(
-        int roomId, PagingQueryParams paging, FilterQueryParams? filters)
+        int roomId, PagingQueryParams paging, FilterQueryParams? filters,
+        CancellationToken cancellationToken = default)
     {
-        var roomExists = await db.Rooms.AnyAsync(r => r.Id == roomId);
+        var roomExists = await db.Rooms.AnyAsync(r => r.Id == roomId, cancellationToken);
         if (!roomExists)
             return PaginatedResponse<DeviceItemDto>.Create(
                 ResultStatus.NotFound, [], paging.Page, paging.PageSize, 0, "Room not found.");
@@ -59,30 +61,32 @@ public class RoomService(IAppDbContext db) : IRoomService
             .Where(d => d.RoomId == roomId)
             .Select(d => new DeviceItemDto(d.Id, d.HardwareId, d.Name))
             .ApplyFilters(filters?.FilterRules)
-            .ToPaginatedResponseAsync(paging);
+            .ToPaginatedResponseAsync(paging, cancellationToken);
     }
 
-    public async Task<StandardResponse<bool>> AssignDevicesToRoomAsync(int roomId, AssignDevicesRequestDto request)
+    public async Task<StandardResponse<bool>> AssignDevicesToRoomAsync(
+        int roomId, AssignDevicesRequestDto request, CancellationToken cancellationToken = default)
     {
-        var roomExists = await db.Rooms.AnyAsync(r => r.Id == roomId);
+        var roomExists = await db.Rooms.AnyAsync(r => r.Id == roomId, cancellationToken);
         if (!roomExists)
             return StandardResponse<bool>.NotFound($"Room with id {roomId} not found.");
 
         var devices = await db.Devices
             .Where(d => request.DeviceIds.Contains(d.Id))
-            .ToListAsync();
+            .ToListAsync(cancellationToken);
 
         foreach (var device in devices)
         {
             device.RoomId = roomId;
         }
 
-        await db.SaveChangesAsync();
+        await db.SaveChangesAsync(cancellationToken);
 
         return StandardResponse<bool>.SuccessOk(true, $"{devices.Count} device(s) assigned to room successfully.");
     }
 
-    public async Task<StandardResponse<int>> CreateRoomAsync(CreateRoomRequestDto request)
+    public async Task<StandardResponse<int>> CreateRoomAsync(
+        CreateRoomRequestDto request, CancellationToken cancellationToken = default)
     {
         var room = new Room
         {
@@ -97,7 +101,7 @@ public class RoomService(IAppDbContext db) : IRoomService
         {
             var devices = await db.Devices
                 .Where(d => request.DeviceIds.Contains(d.Id))
-                .ToListAsync();
+                .ToListAsync(cancellationToken);
 
             foreach (var device in devices)
             {
@@ -105,14 +109,15 @@ public class RoomService(IAppDbContext db) : IRoomService
             }
         }
         
-        await db.SaveChangesAsync();
+        await db.SaveChangesAsync(cancellationToken);
 
         return StandardResponse<int>.SuccessCreated(room.Id, "Room created successfully.");
     }
 
-    public async Task<StandardResponse<bool>> UpdateRoomAsync(int id, UpdateRoomRequestDto request)
+    public async Task<StandardResponse<bool>> UpdateRoomAsync(
+        int id, UpdateRoomRequestDto request, CancellationToken cancellationToken = default)
     {
-        var room = await db.Rooms.FirstOrDefaultAsync(r => r.Id == id);
+        var room = await db.Rooms.FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
         if (room == null)
             return StandardResponse<bool>.NotFound($"Room with id {id} not found.");
 
@@ -120,41 +125,43 @@ public class RoomService(IAppDbContext db) : IRoomService
         room.Description = request.Description;
         room.IsActive = request.IsActive;
 
-        await db.SaveChangesAsync();
+        await db.SaveChangesAsync(cancellationToken);
 
         return StandardResponse<bool>.SuccessOk(true, "Room updated successfully.");
     }
 
-    public async Task<StandardResponse<bool>> DeleteRoomAsync(int id)
+    public async Task<StandardResponse<bool>> DeleteRoomAsync(
+        int id, CancellationToken cancellationToken = default)
     {
-        var room = await db.Rooms.FirstOrDefaultAsync(r => r.Id == id);
+        var room = await db.Rooms.FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
         if (room == null)
             return StandardResponse<bool>.NotFound($"Room with id {id} not found.");
 
         db.Rooms.Remove(room);
-        await db.SaveChangesAsync();
+        await db.SaveChangesAsync(cancellationToken);
 
         return StandardResponse<bool>.SuccessOk(true, "Room deleted successfully.");
     }
 
     public async Task<PaginatedResponse<LookupItemDto>> GetRoomsLookupAsync(
-        LookupPagingQueryParams paging, FilterQueryParams? filters)
+        LookupPagingQueryParams paging, FilterQueryParams? filters, CancellationToken cancellationToken = default)
     {
         return await db.Rooms
             .AsNoTracking()
             .Select(r => new LookupItemDto(r.Id, r.Name, r.IsActive))
             .ApplyFilters(filters?.FilterRules)
-            .ToPaginatedResponseAsync(new PagingQueryParams(paging.Page, paging.PageSize));
+            .ToPaginatedResponseAsync(new PagingQueryParams(paging.Page, paging.PageSize), cancellationToken);
     }
 
-    public async Task<StandardResponse<bool>> ToggleRoomActiveAsync(int id, bool isActive)
+    public async Task<StandardResponse<bool>> ToggleRoomActiveAsync(
+        int id, bool isActive, CancellationToken cancellationToken = default)
     {
-        var room = await db.Rooms.FirstOrDefaultAsync(r => r.Id == id);
+        var room = await db.Rooms.FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
         if (room == null)
             return StandardResponse<bool>.NotFound($"Room with id {id} not found.");
 
         room.IsActive = isActive;
-        await db.SaveChangesAsync();
+        await db.SaveChangesAsync(cancellationToken);
 
         return StandardResponse<bool>.SuccessOk(true, isActive ? "Room activated." : "Room deactivated.");
     }
