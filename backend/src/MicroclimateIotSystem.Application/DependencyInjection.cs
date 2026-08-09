@@ -1,3 +1,4 @@
+using MicroclimateIotSystem.Application.Interfaces;
 using MicroclimateIotSystem.Application.Interfaces.Services;
 using MicroclimateIotSystem.Application.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -13,6 +14,8 @@ public static class DependencyInjection
         services.AddScoped<IRoomService, RoomService>();
         services.AddScoped<IAlertRuleService, AlertRuleService>();
         services.AddScoped<ITelemetryService, TelemetryService>();
+        services.AddScoped<IAlertService, AlertService>();
+        services.AddScoped<IAlertEvaluator, AlertEvaluator>();
         return services;
     }
 }

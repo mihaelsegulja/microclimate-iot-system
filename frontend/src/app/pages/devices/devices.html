@@ -1,0 +1,33 @@
+<div class="page-header">
+  <h1>Devices</h1>
+
+  <div class="header-actions">
+    <mat-form-field appearance="outline" class="search-field">
+      <mat-label>Search by name</mat-label>
+      <input
+        matInput
+        (keyup.enter)="onSearch($any($event.target).value)"
+        placeholder="garage"
+      />
+    </mat-form-field>
+
+    <button mat-flat-button color="primary" (click)="openNew()">
+      <mat-icon>add</mat-icon>
+      New device
+    </button>
+  </div>
+</div>
+
+<app-data-table
+  [columns]="columns"
+  [rows]="devices()"
+  [actions]="actions"
+  [totalItems]="totalItems()"
+  [pageIndex]="page()"
+  [pageSize]="pageSize()"
+  [loading]="loading()"
+  [pageSizeOptions]="[10, 25, 50]"
+  emptyMessage="No devices found."
+  (pageChange)="onPageChange($event)"
+  (pageSizeChange)="onPageSizeChange($event)"
+/>

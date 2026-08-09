@@ -1,0 +1,60 @@
+@if (loading()) {
+  <mat-progress-bar mode="indeterminate" class="table-progress"></mat-progress-bar>
+}
+
+@if (rows().length === 0) {
+  <div class="table-empty">
+    @if (loading()) {
+      <span>Loading...</span>
+    } @else {
+      <span>{{ emptyMessage() }}</span>
+    }
+  </div>
+} @else {
+  <div class="table-scroll">
+    <table mat-table [dataSource]="rows()">
+      @for (column of columns(); track column.key) {
+        <ng-container [matColumnDef]="column.key">
+          <th mat-header-cell *matHeaderCellDef>{{ column.header }}</th>
+          <td mat-cell *matCellDef="let row">{{ formatCell(column, row) }}</td>
+        </ng-container>
+      }
+
+      <ng-container matColumnDef="__actions">
+        <th mat-header-cell *matHeaderCellDef class="actions-cell"></th>
+        <td mat-cell *matCellDef="let row" class="actions-cell">
+          @if (hasVisibleActions(row)) {
+            <button mat-icon-button [matMenuTriggerFor]="actionsMenu" aria-label="Row actions">
+              <mat-icon>more_vert</mat-icon>
+            </button>
+
+            <mat-menu #actionsMenu="matMenu" xPosition="before">
+              @for (action of actions(); track $index) {
+                <button
+                  mat-menu-item
+                  [disabled]="isActionDisabled(action, row)"
+                  (click)="run(action, row)"
+                >
+                  <mat-icon>{{ action.icon }}</mat-icon>
+                  <span>{{ action.label(row) }}</span>
+                </button>
+              }
+            </mat-menu>
+          }
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns()"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns()"></tr>
+    </table>
+  </div>
+
+  <mat-paginator
+    [length]="totalItems()"
+    [pageIndex]="pageIndex()"
+    [pageSize]="pageSize()"
+    [pageSizeOptions]="pageSizeOptions()"
+    [showFirstLastButtons]="true"
+    (page)="onPageChange($event)"
+  ></mat-paginator>
+}

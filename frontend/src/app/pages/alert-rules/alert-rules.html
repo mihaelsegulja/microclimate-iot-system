@@ -1,0 +1,33 @@
+<div class="page-header">
+  <h1>Alert rules</h1>
+
+  <div class="header-actions">
+    <mat-form-field appearance="outline" class="search-field">
+      <mat-label>Search by name</mat-label>
+      <input
+        matInput
+        (keyup.enter)="onSearch($any($event.target).value)"
+        placeholder="high temp"
+      />
+    </mat-form-field>
+
+    <button mat-flat-button color="primary" (click)="openNew()">
+      <mat-icon>add</mat-icon>
+      New rule
+    </button>
+  </div>
+</div>
+
+<app-data-table
+  [columns]="columns"
+  [rows]="rules()"
+  [actions]="actions"
+  [totalItems]="totalItems()"
+  [pageIndex]="page()"
+  [pageSize]="pageSize()"
+  [loading]="loading()"
+  [pageSizeOptions]="[10, 25, 50]"
+  emptyMessage="No alert rules found."
+  (pageChange)="onPageChange($event)"
+  (pageSizeChange)="onPageSizeChange($event)"
+/>

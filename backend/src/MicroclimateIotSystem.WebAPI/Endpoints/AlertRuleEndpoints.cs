@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using MicroclimateIotSystem.Application.DTOs;
 using MicroclimateIotSystem.Application.Interfaces.Services;
 using MicroclimateIotSystem.Application.Models;
@@ -11,7 +12,8 @@ public static class AlertRuleEndpoints
 {
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
-        PropertyNameCaseInsensitive = true
+        PropertyNameCaseInsensitive = true,
+        Converters = { new JsonStringEnumConverter() }
     };
 
     public static IEndpointRouteBuilder MapAlertRuleEndpoints(this IEndpointRouteBuilder app)

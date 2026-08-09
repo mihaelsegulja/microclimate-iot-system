@@ -1,11 +1,14 @@
 using System.Text.Json.Serialization;
 using MicroclimateIotSystem.Application;
 using MicroclimateIotSystem.Application.Configurations;
+using MicroclimateIotSystem.Application.Interfaces;
 using MicroclimateIotSystem.Infrastructure;
 using MicroclimateIotSystem.WebAPI.Abstractions;
 using MicroclimateIotSystem.WebAPI.Endpoints;
 using MicroclimateIotSystem.WebAPI.Extensions;
+using MicroclimateIotSystem.WebAPI.Hubs;
 using MicroclimateIotSystem.WebAPI.Middleware;
+using MicroclimateIotSystem.WebAPI.SignalR;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -52,6 +55,13 @@ builder.Services.AddProblemDetails();
 
 builder.Services.AddEndpointsApiExplorer();
 
+builder.Services.AddSignalR().AddJsonProtocol(options =>
+{
+    options.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+});
+builder.Services.AddSingleton<ITelemetryBroadcaster, TelemetryBroadcaster>();
+builder.Services.AddSingleton<IAlertBroadcaster, AlertBroadcaster>();
+
 var app = builder.Build();
 
 app.UseExceptionHandler();
@@ -78,5 +88,8 @@ app.MapAuthEndpoints();
 app.MapDeviceEndpoints();
 app.MapRoomEndpoints();
 app.MapAlertRuleEndpoints();
+app.MapAlertEndpoints();
+
+app.MapHub<NotificationHub>("/hubs/telemetry").RequireAuthorization();
 
 app.Run();

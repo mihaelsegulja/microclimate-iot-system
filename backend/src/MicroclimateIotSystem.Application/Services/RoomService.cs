@@ -71,18 +71,33 @@ public class RoomService(IAppDbContext db) : IRoomService
         if (!roomExists)
             return StandardResponse<bool>.NotFound($"Room with id {roomId} not found.");
 
-        var devices = await db.Devices
-            .Where(d => request.DeviceIds.Contains(d.Id))
+        var requestedIds = request.DeviceIds.ToHashSet();
+
+        var current = await db.Devices
+            .Where(d => d.RoomId == roomId)
             .ToListAsync(cancellationToken);
 
-        foreach (var device in devices)
+        foreach (var device in current)
         {
-            device.RoomId = roomId;
+            if (!requestedIds.Contains(device.Id))
+                device.RoomId = null;
+        }
+
+        if (requestedIds.Count > 0)
+        {
+            var devices = await db.Devices
+                .Where(d => requestedIds.Contains(d.Id))
+                .ToListAsync(cancellationToken);
+
+            foreach (var device in devices)
+            {
+                device.RoomId = roomId;
+            }
         }
 
         await db.SaveChangesAsync(cancellationToken);
 
-        return StandardResponse<bool>.SuccessOk(true, $"{devices.Count} device(s) assigned to room successfully.");
+        return StandardResponse<bool>.SuccessOk(true, $"{requestedIds.Count} device(s) assigned to room successfully.");
     }
 
     public async Task<StandardResponse<int>> CreateRoomAsync(
@@ -96,6 +111,7 @@ public class RoomService(IAppDbContext db) : IRoomService
         };
 
         db.Rooms.Add(room);
+        await db.SaveChangesAsync(cancellationToken);
 
         if (request.DeviceIds?.Count > 0)
         {
@@ -107,9 +123,9 @@ public class RoomService(IAppDbContext db) : IRoomService
             {
                 device.RoomId = room.Id;
             }
+
+            await db.SaveChangesAsync(cancellationToken);
         }
-        
-        await db.SaveChangesAsync(cancellationToken);
 
         return StandardResponse<int>.SuccessCreated(room.Id, "Room created successfully.");
     }

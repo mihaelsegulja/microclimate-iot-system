@@ -93,7 +93,6 @@ public class DeviceService(IAppDbContext db, IMessageQueuePublisher publisher, I
         device.Name = request.Name;
         device.HardwareId = request.HardwareId;
         device.IsActive = request.IsActive;
-        device.TelemetryIntervalSeconds = request.TelemetryIntervalSeconds;
         device.RoomId = request.RoomId;
 
         await db.SaveChangesAsync(cancellationToken);
@@ -110,6 +109,23 @@ public class DeviceService(IAppDbContext db, IMessageQueuePublisher publisher, I
         var device = await db.Devices.FirstOrDefaultAsync(d => d.Id == id, cancellationToken);
         if (device == null)
             return StandardResponse<bool>.NotFound($"Device with id {id} not found.");
+
+        var ruleIds = await db.AlertRules
+            .Where(r => r.DeviceId == id)
+            .Select(r => r.Id)
+            .ToListAsync(cancellationToken);
+
+        var ruleIdSet = new HashSet<int>(ruleIds);
+
+        var alerts = await db.Alerts
+            .Where(a => a.DeviceId == id || ruleIdSet.Contains(a.AlertRuleId))
+            .ToListAsync(cancellationToken);
+        db.Alerts.RemoveRange(alerts);
+
+        var rules = await db.AlertRules
+            .Where(r => r.DeviceId == id)
+            .ToListAsync(cancellationToken);
+        db.AlertRules.RemoveRange(rules);
 
         db.Devices.Remove(device);
         await db.SaveChangesAsync(cancellationToken);
@@ -149,8 +165,32 @@ public class DeviceService(IAppDbContext db, IMessageQueuePublisher publisher, I
         return StandardResponse<bool>.SuccessOk(true, isActive ? "Device activated." : "Device deactivated.");
     }
 
-    public async Task<StandardResponse<bool>> SendDeviceConfigAsync(
-        int id, object config, CancellationToken cancellationToken = default)
+    public async Task<StandardResponse<bool>> UpdateDeviceConfigAsync(
+        int id, DeviceConfigRequestDto request, CancellationToken cancellationToken = default)
+    {
+        var device = await db.Devices.FirstOrDefaultAsync(d => d.Id == id, cancellationToken);
+        if (device == null)
+            return StandardResponse<bool>.NotFound($"Device with id {id} not found.");
+
+        device.TelemetryIntervalSeconds = request.TelemetryIntervalSeconds;
+        await db.SaveChangesAsync(cancellationToken);
+
+        var command = new DeviceCommandMessage(
+            CommandId: Guid.NewGuid().ToString(),
+            HardwareId: device.HardwareId,
+            CommandType: "UPDATE_CONFIG",
+            SentAt: DateTime.UtcNow,
+            Payload: new { telemetryIntervalSeconds = request.TelemetryIntervalSeconds }
+        );
+
+        var routingKey = $"devices.{device.HardwareId}.commands";
+        await publisher.PublishAsync(routingKey, command);
+
+        return StandardResponse<bool>.SuccessOk(true, "Device configuration updated.");
+    }
+
+    public async Task<StandardResponse<bool>> RebootDeviceAsync(
+        int id, CancellationToken cancellationToken = default)
     {
         var device = await db.Devices.AsNoTracking().FirstOrDefaultAsync(d => d.Id == id, cancellationToken);
         if (device == null)
@@ -159,14 +199,14 @@ public class DeviceService(IAppDbContext db, IMessageQueuePublisher publisher, I
         var command = new DeviceCommandMessage(
             CommandId: Guid.NewGuid().ToString(),
             HardwareId: device.HardwareId,
-            CommandType: "UPDATE_CONFIG",
+            CommandType: "REBOOT",
             SentAt: DateTime.UtcNow,
-            Payload: config
+            Payload: null
         );
 
         var routingKey = $"devices.{device.HardwareId}.commands";
         await publisher.PublishAsync(routingKey, command);
 
-        return StandardResponse<bool>.SuccessOk(true, "Configuration command sent to device.");
+        return StandardResponse<bool>.SuccessOk(true, "Reboot command sent to device.");
     }
 }

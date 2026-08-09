@@ -21,6 +21,9 @@ public record UpdateDeviceRequestDto(
     string Name,
     string HardwareId,
     bool IsActive,
-    int TelemetryIntervalSeconds,
     int? RoomId
+);
+
+public record DeviceConfigRequestDto(
+    int TelemetryIntervalSeconds
 );

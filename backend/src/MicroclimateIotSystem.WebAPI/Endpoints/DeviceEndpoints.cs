@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using MicroclimateIotSystem.Application.DTOs;
 using MicroclimateIotSystem.Application.Interfaces.Services;
 using MicroclimateIotSystem.Application.Models;
@@ -11,12 +12,8 @@ public static class DeviceEndpoints
 {
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
-        PropertyNameCaseInsensitive = true
-    };
-
-    private static readonly JsonSerializerOptions SendConfigJsonOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        PropertyNameCaseInsensitive = true,
+        Converters = { new JsonStringEnumConverter() }
     };
 
     public static IEndpointRouteBuilder MapDeviceEndpoints(this IEndpointRouteBuilder app)
@@ -32,7 +29,8 @@ public static class DeviceEndpoints
         group.MapPut("/{id:int}", UpdateAsync).WithName("UpdateDevice").WithOpenApi();
         group.MapDelete("/{id:int}", DeleteAsync).WithName("DeleteDevice").WithOpenApi();
         group.MapPatch("/{id:int}/active", ToggleActiveAsync).WithName("ToggleDeviceActive").WithOpenApi();
-        group.MapPost("/{id:int}/config", SendConfigAsync).WithName("SendDeviceConfig").WithOpenApi();
+        group.MapPut("/{id:int}/config", UpdateConfigAsync).WithName("UpdateDeviceConfig").WithOpenApi();
+        group.MapPost("/{id:int}/reboot", RebootAsync).WithName("RebootDevice").WithOpenApi();
         group.MapGet("/{id:int}/telemetry", GetTelemetryAsync).WithName("GetDeviceTelemetry").WithOpenApi();
         group.MapGet("/{id:int}/telemetry/latest", GetLatestTelemetryAsync).WithName("GetDeviceLatestTelemetry").WithOpenApi();
 
@@ -123,13 +121,22 @@ public static class DeviceEndpoints
         return ResultHandler.Handle(response);
     }
 
-    private static async Task<IResult> SendConfigAsync(
+    private static async Task<IResult> UpdateConfigAsync(
         int id,
-        [FromBody] System.Text.Json.JsonElement config,
+        [FromBody] DeviceConfigRequestDto request,
         IDeviceService deviceService,
         CancellationToken cancellationToken)
     {
-        var response = await deviceService.SendDeviceConfigAsync(id, config, cancellationToken);
+        var response = await deviceService.UpdateDeviceConfigAsync(id, request, cancellationToken);
+        return ResultHandler.Handle(response);
+    }
+
+    private static async Task<IResult> RebootAsync(
+        int id,
+        IDeviceService deviceService,
+        CancellationToken cancellationToken)
+    {
+        var response = await deviceService.RebootDeviceAsync(id, cancellationToken);
         return ResultHandler.Handle(response);
     }
 

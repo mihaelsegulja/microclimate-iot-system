@@ -1,0 +1,159 @@
+.telemetry-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+
+  h1 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 500;
+  }
+
+  .subtitle {
+    font-size: 15px;
+    opacity: 0.7;
+  }
+}
+
+.view-tabs {
+  margin-top: 16px;
+
+  .live-view,
+  .history-view {
+    padding: 16px 0;
+  }
+}
+
+.live-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+
+  .conn-chip {
+    padding: 3px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    background: #e57373;
+
+    &.online {
+      background: #81c784;
+    }
+  }
+
+  .last-update {
+    font-size: 13px;
+    opacity: 0.7;
+  }
+}
+
+.reading-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 10px;
+
+  .reading-card {
+    flex: 0 0 auto;
+  }
+}
+
+.chart-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 10px;
+}
+
+.reading-card {
+  .reading-value {
+    font-size: 24px;
+    font-weight: 600;
+
+    .unit {
+      font-size: 15px;
+      font-weight: 400;
+      opacity: 0.7;
+      margin-left: 4px;
+    }
+  }
+
+  .reading-time {
+    font-size: 13px;
+    opacity: 0.7;
+    margin-top: 2px;
+  }
+}
+
+.card-title {
+  font-size: 13px;
+  font-weight: 600;
+  opacity: 0.85;
+}
+
+.history-controls {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+
+  .range-field {
+    min-width: 320px;
+  }
+
+  .presets {
+    display: flex;
+    gap: 6px;
+    padding-top: 2px;
+
+    button.active {
+      background: var(--mat-sys-primary);
+      color: var(--mat-sys-on-primary);
+    }
+  }
+}
+
+.key-chips {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+
+  .key-label {
+    font-size: 13px;
+    opacity: 0.6;
+  }
+
+  button.active {
+    background: var(--mat-sys-primary);
+    color: var(--mat-sys-on-primary);
+  }
+}
+
+.chart-card {
+  padding: 8px 10px 6px;
+
+  .chart-body {
+    padding: 0;
+  }
+
+  .chart-title-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+
+  .chart-unit {
+    font-size: 14px;
+    opacity: 0.6;
+  }
+
+  .chart-canvas {
+    height: 250px;
+    position: relative;
+  }
+}

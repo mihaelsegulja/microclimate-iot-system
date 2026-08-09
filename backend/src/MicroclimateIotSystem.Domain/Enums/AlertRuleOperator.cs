@@ -1,6 +1,6 @@
 namespace MicroclimateIotSystem.Domain.Enums;
 
-public enum AlertOperator
+public enum AlertRuleOperator
 {
     GreaterThan,
     GreaterThanOrEqualTo,

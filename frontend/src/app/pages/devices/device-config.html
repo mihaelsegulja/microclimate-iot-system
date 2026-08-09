@@ -1,0 +1,23 @@
+<h2 mat-dialog-title>Device configuration</h2>
+
+<mat-dialog-content>
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="form-body">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Telemetry interval (seconds)</mat-label>
+      <input matInput type="number" formControlName="telemetryIntervalSeconds" />
+      <mat-hint>Applied to the device on save.</mat-hint>
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="close()">Cancel</button>
+  <button
+    mat-flat-button
+    color="primary"
+    [disabled]="form.invalid || saving()"
+    (click)="onSubmit()"
+  >
+    {{ saving() ? 'Saving...' : 'Save' }}
+  </button>
+</mat-dialog-actions>

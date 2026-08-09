@@ -55,7 +55,7 @@ public class TelemetryConsumerHostedService : BackgroundService
 
         try
         {
-            var message = JsonSerializer.Deserialize<TelemetryReadingDto>(body);
+            var message = JsonSerializer.Deserialize<TelemetryReadingDto>(body, new JsonSerializerOptions(JsonSerializerDefaults.Web));
             if (message is null)
             {
                 _logger.LogWarning("Received null message, discarding");

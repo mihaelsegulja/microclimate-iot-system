@@ -22,6 +22,68 @@ namespace MicroclimateIotSystem.Infrastructure.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("MicroclimateIotSystem.Domain.Entities.Alert", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AlertRuleId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ClearedAt")
+                        .HasColumnType("datetime2(0)");
+
+                    b.Property<int>("DeviceId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("HardwareId")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(32)");
+
+                    b.Property<int>("Operator")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TelemetryKey")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<float>("ThresholdValue")
+                        .HasColumnType("real");
+
+                    b.Property<DateTime>("TriggeredAt")
+                        .HasColumnType("datetime2(0)");
+
+                    b.Property<string>("Unit")
+                        .HasMaxLength(50)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<float>("Value")
+                        .HasColumnType("real");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AlertRuleId");
+
+                    b.HasIndex("DeviceId");
+
+                    b.HasIndex("Status", "DeviceId");
+
+                    b.HasIndex("Status", "TriggeredAt");
+
+                    b.ToTable("Alerts");
+                });
+
             modelBuilder.Entity("MicroclimateIotSystem.Domain.Entities.AlertRule", b =>
                 {
                     b.Property<int>("Id")
@@ -94,6 +156,9 @@ namespace MicroclimateIotSystem.Infrastructure.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("HardwareId")
+                        .IsUnique();
 
                     b.HasIndex("RoomId");
 
@@ -227,6 +292,25 @@ namespace MicroclimateIotSystem.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("MicroclimateIotSystem.Domain.Entities.Alert", b =>
+                {
+                    b.HasOne("MicroclimateIotSystem.Domain.Entities.AlertRule", "AlertRule")
+                        .WithMany()
+                        .HasForeignKey("AlertRuleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MicroclimateIotSystem.Domain.Entities.Device", "Device")
+                        .WithMany()
+                        .HasForeignKey("DeviceId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("AlertRule");
+
+                    b.Navigation("Device");
                 });
 
             modelBuilder.Entity("MicroclimateIotSystem.Domain.Entities.AlertRule", b =>

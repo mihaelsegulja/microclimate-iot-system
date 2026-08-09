@@ -12,5 +12,6 @@ public interface IDeviceService
     Task<StandardResponse<bool>> DeleteDeviceAsync(int id, CancellationToken cancellationToken = default);
     Task<StandardResponse<bool>> ToggleDeviceActiveAsync(int id, bool isActive, CancellationToken cancellationToken = default);
     Task<PaginatedResponse<LookupItemDto>> GetDevicesLookupAsync(LookupPagingQueryParams paging, FilterQueryParams? filters, bool? available = null, CancellationToken cancellationToken = default);
-    Task<StandardResponse<bool>> SendDeviceConfigAsync(int id, object config, CancellationToken cancellationToken = default);
+    Task<StandardResponse<bool>> UpdateDeviceConfigAsync(int id, DeviceConfigRequestDto request, CancellationToken cancellationToken = default);
+    Task<StandardResponse<bool>> RebootDeviceAsync(int id, CancellationToken cancellationToken = default);
 }

@@ -1,0 +1,29 @@
+:host {
+  display: block;
+}
+
+.table-progress {
+  margin-top: -2px;
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+}
+
+.actions-cell {
+  width: 48px;
+  text-align: right;
+}
+
+.empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+  color: var(--mat-sys-on-surface-variant);
+  font-size: 14px;
+}

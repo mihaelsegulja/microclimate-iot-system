@@ -1,0 +1,52 @@
+<h2 mat-dialog-title>{{ isEdit() ? 'Edit room' : 'New room' }}</h2>
+
+<mat-dialog-content>
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="form-body">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Room name</mat-label>
+      <input matInput formControlName="name" autocomplete="off" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Description</mat-label>
+      <textarea matInput rows="3" formControlName="description"></textarea>
+    </mat-form-field>
+
+    @if (isEdit()) {
+      <mat-slide-toggle formControlName="isActive">Active</mat-slide-toggle>
+    }
+
+    <h3 class="devices-title">Devices</h3>
+    <p class="devices-hint">
+      {{ isEdit()
+          ? 'Unassign devices by unchecking them.'
+          : 'Optionally assign devices to this room.' }}
+    </p>
+
+    <div class="device-list">
+      @for (device of deviceOptions(); track device.id) {
+        <mat-checkbox
+          class="device-option"
+          [checked]="isSelected(device.id)"
+          (change)="toggleDevice(device.id, $event.checked)"
+        >
+          {{ device.display }}
+        </mat-checkbox>
+      } @empty {
+        <p class="no-devices">No devices found.</p>
+      }
+    </div>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="close()">Cancel</button>
+  <button
+    mat-flat-button
+    color="primary"
+    [disabled]="form.invalid || saving()"
+    (click)="onSubmit()"
+  >
+    {{ saving() ? 'Saving...' : 'Save' }}
+  </button>
+</mat-dialog-actions>

@@ -1,0 +1,42 @@
+<h2 mat-dialog-title>{{ isEdit() ? 'Edit device' : 'New device' }}</h2>
+
+<mat-dialog-content>
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="form-body">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Device name</mat-label>
+      <input matInput formControlName="name" autocomplete="off" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Hardware ID</mat-label>
+      <input matInput formControlName="hardwareId" autocomplete="off" />
+      <mat-hint>Must match the identifier the device publishes with.</mat-hint>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Room</mat-label>
+      <mat-select formControlName="roomId">
+        <mat-option [value]="null">None</mat-option>
+        @for (room of rooms(); track room.id) {
+          <mat-option [value]="room.id">{{ room.display }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    @if (isEdit()) {
+      <mat-slide-toggle formControlName="isActive">Active</mat-slide-toggle>
+    }
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="close()">Cancel</button>
+  <button
+    mat-flat-button
+    color="primary"
+    [disabled]="form.invalid || saving()"
+    (click)="onSubmit()"
+  >
+    {{ saving() ? 'Saving...' : 'Save' }}
+  </button>
+</mat-dialog-actions>

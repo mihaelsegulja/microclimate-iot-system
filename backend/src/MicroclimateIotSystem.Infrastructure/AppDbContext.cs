@@ -16,6 +16,7 @@ public class AppDbContext : DbContext, IAppDbContext
     public DbSet<TelemetryReading> TelemetryReadings { get; set; }
     public DbSet<Room> Rooms { get; set; }
     public DbSet<AlertRule> AlertRules { get; set; }
+    public DbSet<Alert> Alerts { get; set; }
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -64,6 +65,8 @@ public class AppDbContext : DbContext, IAppDbContext
                 .IsRequired();
             entity.Property(e => e.TelemetryIntervalSeconds)
                 .IsRequired();
+            entity.HasIndex(e => e.HardwareId)
+                .IsUnique();
         });
 
         modelBuilder.Entity<TelemetryReading>(entity =>
@@ -128,6 +131,51 @@ public class AppDbContext : DbContext, IAppDbContext
                 .WithMany()
                 .HasForeignKey(e => e.DeviceId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<Alert>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.HardwareId)
+                .HasMaxLength(32)
+                .IsUnicode(false)
+                .IsRequired();
+            entity.Property(e => e.TelemetryKey)
+                .HasMaxLength(50)
+                .IsUnicode(false)
+                .IsRequired();
+            entity.Property(e => e.Unit)
+                .HasMaxLength(50)
+                .IsUnicode(false)
+                .IsRequired(false);
+            entity.Property(e => e.Value)
+                .HasColumnType("real")
+                .IsRequired();
+            entity.Property(e => e.ThresholdValue)
+                .HasColumnType("real")
+                .IsRequired();
+            entity.Property(e => e.Operator)
+                .IsRequired();
+            entity.Property(e => e.Status)
+                .IsRequired();
+            entity.Property(e => e.TriggeredAt)
+                .HasColumnType("datetime2(0)")
+                .IsRequired();
+            entity.Property(e => e.ClearedAt)
+                .HasColumnType("datetime2(0)")
+                .IsRequired(false);
+            entity.HasIndex(e => new { e.Status, e.DeviceId });
+            entity.HasIndex(e => new { e.Status, e.TriggeredAt });
+
+            entity.HasOne(e => e.AlertRule)
+                .WithMany()
+                .HasForeignKey(e => e.AlertRuleId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.Device)
+                .WithMany()
+                .HasForeignKey(e => e.DeviceId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }

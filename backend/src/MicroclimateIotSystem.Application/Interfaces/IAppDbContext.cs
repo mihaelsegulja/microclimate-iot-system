@@ -11,6 +11,7 @@ public interface IAppDbContext
     DbSet<TelemetryReading> TelemetryReadings { get; }
     DbSet<Room> Rooms { get; }
     DbSet<AlertRule> AlertRules { get; }
+    DbSet<Alert> Alerts { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

@@ -6,7 +6,7 @@ public record AlertRuleResponseDto(
     int Id,
     string Name,
     string TelemetryKey,
-    AlertOperator Operator,
+    AlertRuleOperator Operator,
     double ThresholdValue,
     bool IsActive,
     int? RoomId,
@@ -18,7 +18,7 @@ public record AlertRuleResponseDto(
 public record CreateAlertRuleRequestDto(
     string Name,
     string TelemetryKey,
-    AlertOperator Operator,
+    AlertRuleOperator Operator,
     double ThresholdValue,
     int? RoomId,
     int? DeviceId

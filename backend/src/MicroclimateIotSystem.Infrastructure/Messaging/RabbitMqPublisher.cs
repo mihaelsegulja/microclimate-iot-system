@@ -23,7 +23,7 @@ public class RabbitMqPublisher : IMessageQueuePublisher, IAsyncDisposable
     {
         var channel = await GetChannelAsync();
 
-        var body = JsonSerializer.SerializeToUtf8Bytes(message);
+        var body = JsonSerializer.SerializeToUtf8Bytes(message, new JsonSerializerOptions(JsonSerializerDefaults.Web));
 
         var properties = new BasicProperties
         {

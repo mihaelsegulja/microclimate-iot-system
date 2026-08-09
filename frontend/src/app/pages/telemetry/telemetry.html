@@ -1,0 +1,141 @@
+<div class="page-header telemetry-header">
+  <button mat-icon-button (click)="back()" aria-label="Back">
+    <mat-icon>arrow_back</mat-icon>
+  </button>
+  <h1>Telemetry</h1>
+  @if (device(); as d) {
+    <span class="subtitle">{{ d.name }} · {{ d.hardwareId }}</span>
+  }
+</div>
+
+@if (loading()) {
+  <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+}
+
+<mat-tab-group
+  class="view-tabs"
+  (selectedIndexChange)="show($event === 0 ? 'live' : 'history')"
+>
+    <mat-tab label="Live">
+      @defer (when view() === 'live') {
+        <section class="live-view">
+          <div class="live-header">
+            <span
+              class="conn-chip"
+              [class.online]="signalr.connected()"
+            >
+              {{ signalr.connected() ? 'Live' : 'Connecting…' }}
+            </span>
+            @if (lastUpdate(); as ts) {
+              <span class="last-update">Last update: {{ formatTime(ts) }}</span>
+            }
+          </div>
+
+          @if (liveReadings().length === 0) {
+            <mat-card class="empty-card">No readings received yet.</mat-card>
+          } @else {
+            <div class="reading-grid">
+              @for (r of liveReadings(); track r.key) {
+                <mat-card class="reading-card">
+                  <mat-card-content>
+                    <div class="card-title">{{ normalizeLabel(r.key) }}</div>
+                    <div class="reading-value">
+                      {{ formatValue(r.value) }}
+                      @if (r.unit) {
+                        <span class="unit">{{ liveUnit(r.key) }}</span>
+                      }
+                    </div>
+                    <div class="reading-time">{{ formatTime(r.timestamp) }}</div>
+                  </mat-card-content>
+                </mat-card>
+              }
+            </div>
+
+            <div class="chart-grid">
+              @for (c of liveCharts(); track c.key) {
+                <mat-card class="chart-card">
+                  <mat-card-content class="chart-body">
+                    <div class="chart-title-row">
+                      <span class="card-title">{{ c.label }}</span>
+                      @if (c.unit) {
+                        <span class="chart-unit">{{ c.unit }}</span>
+                      }
+                    </div>
+                    <div class="chart-canvas">
+                      <canvas baseChart type="line" [data]="c.data" [options]="c.options"></canvas>
+                    </div>
+                  </mat-card-content>
+                </mat-card>
+              }
+            </div>
+          }
+        </section>
+      }
+    </mat-tab>
+    <mat-tab label="History">
+      @defer (when view() === 'history') {
+        <section class="history-view">
+          <div class="history-controls">
+            <mat-form-field appearance="outline" class="range-field">
+              <mat-label>Date range</mat-label>
+              <mat-date-range-input [formGroup]="rangeForm" [rangePicker]="picker">
+                <input matStartDate formControlName="start" placeholder="From" />
+                <input matEndDate formControlName="end" placeholder="To" />
+              </mat-date-range-input>
+              <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+              <mat-date-range-picker #picker></mat-date-range-picker>
+            </mat-form-field>
+
+            <div class="presets">
+              @for (preset of rangePresets; track preset.hours) {
+                <button
+                  mat-stroked-button
+                  [class.active]="activePreset() === preset.hours"
+                  (click)="applyPreset(preset.hours)"
+                >
+                  {{ preset.label }}
+                </button>
+              }
+            </div>
+          </div>
+
+          @if (series().length > 0) {
+            <div class="key-chips">
+              <span class="key-label">Keys:</span>
+              @for (s of series(); track s.key) {
+                <button
+                  mat-stroked-button
+                  [class.active]="isKeySelected(s.key)"
+                  (click)="toggleKey(s.key)"
+                >
+                  {{ normalizeLabel(s.key) }}
+                </button>
+              }
+            </div>
+          }
+
+          @if (charts().length === 0) {
+            <mat-card class="empty-card">No telemetry in the selected range.</mat-card>
+          } @else {
+            <div class="chart-grid">
+              @for (c of charts(); track c.key) {
+                <mat-card class="chart-card">
+                  <mat-card-content class="chart-body">
+                    <div class="chart-title-row">
+                      <span class="card-title">{{ c.label }}</span>
+                      @if (c.unit) {
+                        <span class="chart-unit">{{ c.unit }}</span>
+                      }
+                    </div>
+                    <div class="chart-canvas">
+                      <canvas baseChart type="line" [data]="c.data" [options]="c.options"></canvas>
+                    </div>
+                  </mat-card-content>
+                </mat-card>
+              }
+            </div>
+          }
+        </section>
+      }
+    </mat-tab>
+  </mat-tab-group>

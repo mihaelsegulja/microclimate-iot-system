@@ -1,0 +1,42 @@
+.shell-container {
+  height: 100vh;
+}
+
+.shell-sidenav {
+  display: flex;
+  flex-direction: column;
+  width: 240px;
+
+  .brand {
+    padding: 16px;
+    font-size: 18px;
+    font-weight: 500;
+  }
+}
+
+.nav-list {
+  flex: 1;
+  overflow: auto;
+}
+
+.sidenav-footer {
+  padding: 8px 0;
+  border-top: 1px solid var(--mat-sys-outline-variant);
+
+  .username {
+    padding: 0 16px 8px;
+    font-size: 15px;
+    opacity: 0.9;
+  }
+}
+
+.page-content {
+  height: 100%;
+  padding: 16px;
+  overflow: auto;
+  box-sizing: border-box;
+}
+
+.active-link {
+  background-color: var(--mat-sys-secondary-container);
+}

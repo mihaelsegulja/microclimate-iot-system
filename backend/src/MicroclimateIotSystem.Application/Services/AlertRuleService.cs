@@ -97,6 +97,11 @@ public class AlertRuleService(IAppDbContext db) : IAlertRuleService
         if (rule == null)
             return StandardResponse<bool>.NotFound($"Alert rule with id {id} not found.");
 
+        var alerts = await db.Alerts
+            .Where(a => a.AlertRuleId == id)
+            .ToListAsync(cancellationToken);
+        db.Alerts.RemoveRange(alerts);
+
         db.AlertRules.Remove(rule);
         await db.SaveChangesAsync(cancellationToken);
 

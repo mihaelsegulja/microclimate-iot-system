@@ -41,11 +41,12 @@ public static class ChartQueryExtensions
         if (latestTimestamp == null)
             return null;
 
+        var ts = latestTimestamp.Value;
         var readings = await query
             .AsNoTracking()
-            .Where(r => r.Timestamp == latestTimestamp)
-            .Select(r => new SensorReadingDto(r.Key, r.Value, r.Unit))
+            .Where(r => r.Timestamp == ts)
             .OrderBy(r => r.Key)
+            .Select(r => new SensorReadingDto(r.Key, r.Value, r.Unit))
             .ToListAsync(cancellationToken);
 
         return new LatestTelemetryDto(latestTimestamp.Value, readings);

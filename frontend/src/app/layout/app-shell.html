@@ -1,0 +1,44 @@
+<mat-sidenav-container class="shell-container">
+  <mat-sidenav mode="side" opened class="shell-sidenav">
+    <div class="brand">Microclimate IoT</div>
+
+    <mat-nav-list class="nav-list">
+      <a mat-list-item routerLink="/dashboard" routerLinkActive="active-link">
+        <mat-icon matListItemIcon>dashboard</mat-icon>
+        <span matListItemTitle>Dashboard</span>
+      </a>
+      <a mat-list-item routerLink="/devices" routerLinkActive="active-link">
+        <mat-icon matListItemIcon>sensors</mat-icon>
+        <span matListItemTitle>Devices</span>
+      </a>
+      <a mat-list-item routerLink="/rooms" routerLinkActive="active-link">
+        <mat-icon matListItemIcon>meeting_room</mat-icon>
+        <span matListItemTitle>Rooms</span>
+      </a>
+      <a mat-list-item routerLink="/alert-rules" routerLinkActive="active-link">
+        <mat-icon matListItemIcon>rule</mat-icon>
+        <span matListItemTitle>Alert rules</span>
+      </a>
+      <a mat-list-item routerLink="/alerts" routerLinkActive="active-link">
+        <mat-icon matListItemIcon>notification_important</mat-icon>
+        <span matListItemTitle>Alerts</span>
+      </a>
+    </mat-nav-list>
+
+    <div class="sidenav-footer">
+      @if (username()) {
+        <div class="username">{{ username() }}</div>
+      }
+      <a mat-list-item (click)="signOut()">
+        <mat-icon matListItemIcon>logout</mat-icon>
+        <span matListItemTitle>Sign out</span>
+      </a>
+    </div>
+  </mat-sidenav>
+
+  <mat-sidenav-content class="shell-content">
+    <div class="page-content">
+      <router-outlet></router-outlet>
+    </div>
+  </mat-sidenav-content>
+</mat-sidenav-container>

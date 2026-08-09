@@ -1,0 +1,20 @@
+.form-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.condition-row {
+  display: flex;
+  gap: 12px;
+
+  > mat-form-field {
+    flex: 1;
+  }
+}
+
+.scope-group {
+  display: flex;
+  gap: 16px;
+  margin: 8px 0 16px;
+}

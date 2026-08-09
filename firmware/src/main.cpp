@@ -62,9 +62,10 @@ void setup() {
     Serial.printf("[BOOT] Subscribe topic: %s\n", subTopic);
 
     sensors.begin();
-    ntpClient.begin();
 
     wifi.begin(WIFI_SSID, WIFI_PASSWORD);
+    
+    ntpClient.begin();
 
     mqtt.begin(MQTT_BROKER, MQTT_PORT);
     mqtt.setHardwareId(hardwareId);
