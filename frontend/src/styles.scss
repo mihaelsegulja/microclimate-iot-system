@@ -7,3 +7,9 @@ html, body {
   background: var(--mat-sys-background);
   color: var(--mat-sys-on-background);
 }
+
+.alert-snackbar {
+  --mdc-snackbar-container-color: #b3261e;
+  --mdc-snackbar-supporting-text-color: #fff;
+  --mat-snack-bar-button-color: #fff;
+}

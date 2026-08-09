@@ -19,6 +19,8 @@ public class AlertEvaluator(
     /// <summary>Edge detector state: (ruleId, hardwareId) -> currently above/below threshold.</summary>
     private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, bool> State = new();
 
+    private static string StateKey(int ruleId, string hardwareId) => $"{ruleId}:{hardwareId}";
+
     private static volatile bool _hydrated;
     private static readonly SemaphoreSlim HydrateLock = new(1, 1);
 
@@ -41,7 +43,7 @@ public class AlertEvaluator(
                     continue;
 
                 var now = Evaluate(rule.Operator, reading.Value, rule.ThresholdValue);
-                var stateKey = $"{rule.Id}:{hardwareId}";
+                var stateKey = StateKey(rule.Id, hardwareId);
                 var prev = State.TryGetValue(stateKey, out var p) && p;
 
                 if (now && !prev)
@@ -172,7 +174,7 @@ public class AlertEvaluator(
                 .ToListAsync(cancellationToken);
 
             foreach (var a in open)
-                State[$"{a.AlertRuleId}|{a.HardwareId}"] = true;
+                State[StateKey(a.AlertRuleId, a.HardwareId)] = true;
 
             _hydrated = true;
         }

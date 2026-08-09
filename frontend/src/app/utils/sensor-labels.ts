@@ -20,14 +20,38 @@ const UNIT_LABELS: Record<string, string> = {
 
 const CHART_COLORS = [
   '#3375ff',
-  '#ff7043',
-  '#43a047',
-  '#fdd835',
   '#ab47bc',
   '#26c6da',
+  '#ffa726',
+  '#43a047',
+  '#ff7043',
   '#8d6e63',
+  '#fdd835',
   '#ec407a',
+  '#5c6bc0',
+  '#ef5350',
+  '#66bb6a',
+  '#7e57c2',
+  '#26a69a',
+  '#f06292',
+  '#9ccc65',
+  '#29b6f6',
+  '#a1887f',
+  '#ffca28',
+  '#bdbdbd',
 ];
+
+const colorByKey = new Map<string, string>();
+const fillByKey = new Map<string, string>();
+let nextColor = 0;
+
+function hexToRgba(hex: string, alpha: number): string {
+  const value = hex.replace('#', '');
+  const r = parseInt(value.slice(0, 2), 16);
+  const g = parseInt(value.slice(2, 4), 16);
+  const b = parseInt(value.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
 
 export function keyLabel(key: string): string {
   return KEY_LABELS[key] ?? titleCase(key);
@@ -38,11 +62,22 @@ export function unitLabel(unit: string | null): string | null {
 }
 
 export function getKeyColor(key: string): string {
-  let hash = 0;
-  for (let i = 0; i < key.length; i++) {
-    hash = (hash * 31 + key.charCodeAt(i)) | 0;
+  let color = colorByKey.get(key);
+  if (color === undefined) {
+    color = CHART_COLORS[nextColor % CHART_COLORS.length];
+    nextColor++;
+    colorByKey.set(key, color);
   }
-  return CHART_COLORS[Math.abs(hash) % CHART_COLORS.length];
+  return color;
+}
+
+export function getKeyFillColor(key: string): string {
+  let fill = fillByKey.get(key);
+  if (fill === undefined) {
+    fill = hexToRgba(getKeyColor(key), 0.18);
+    fillByKey.set(key, fill);
+  }
+  return fill;
 }
 
 function titleCase(value: string): string {

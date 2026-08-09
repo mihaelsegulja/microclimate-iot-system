@@ -1,0 +1,27 @@
+<div class="page-header">
+  <h1>Alerts</h1>
+
+  <div class="header-actions">
+    <mat-form-field appearance="outline" class="status-field">
+      <mat-label>Status</mat-label>
+      <mat-select [value]="status()" (selectionChange)="onStatusChange($event.value)">
+        <mat-option [value]="null">All</mat-option>
+        <mat-option value="Active">Active</mat-option>
+        <mat-option value="Cleared">Cleared</mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+</div>
+
+<app-data-table
+  [columns]="columns"
+  [rows]="alerts()"
+  [totalItems]="totalItems()"
+  [pageIndex]="page()"
+  [pageSize]="pageSize()"
+  [loading]="loading()"
+  [pageSizeOptions]="[10, 25, 50]"
+  emptyMessage="No alerts found."
+  (pageChange)="onPageChange($event)"
+  (pageSizeChange)="onPageSizeChange($event)"
+/>

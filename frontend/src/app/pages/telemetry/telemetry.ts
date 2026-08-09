@@ -15,7 +15,7 @@ import { Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { Device } from '../../models/device';
 import { SensorReading, ChartSeries, ChartPoint } from '../../models/telemetry';
-import { keyLabel, unitLabel, getKeyColor } from '../../utils/sensor-labels';
+import { keyLabel, unitLabel, getKeyColor, getKeyFillColor } from '../../utils/sensor-labels';
 import { formatDateTime, formatAxis } from '../../utils/date-format';
 import { formatNumber } from '../../utils/format-number';
 import { DeviceService } from '../../services/device.service';
@@ -150,7 +150,6 @@ export class TelemetryComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     const hardwareId = this.device()?.hardwareId;
     if (hardwareId) this.signalr.leaveDevice(hardwareId).catch(() => undefined);
-    this.signalr.disconnect().catch(() => undefined);
     this.subscription?.unsubscribe();
     this.rangeSub?.unsubscribe();
   }
@@ -292,12 +291,14 @@ export class TelemetryComponent implements OnInit, OnDestroy {
       labels: points.map((p) => formatAxis(p.timestamp, rangeHours)),
       datasets: [{
         data: points.map((p) => p.value),
-        fill: false,
+        fill: true,
         borderColor: getKeyColor(key),
-        backgroundColor: getKeyColor(key),
+        backgroundColor: getKeyFillColor(key),
         tension: 0.2,
-        pointRadius: 0,
-        pointHoverRadius: 3,
+        pointRadius: 4,
+        pointHoverRadius: 7,
+        pointBorderWidth: 1,
+        pointBackgroundColor: '#fff',
       }],
     };
     return {
