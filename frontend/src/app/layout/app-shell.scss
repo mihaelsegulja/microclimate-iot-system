@@ -6,6 +6,7 @@
   display: flex;
   flex-direction: column;
   width: 240px;
+  background-color: var(--mat-sys-surface-container);
 
   .brand {
     padding: 16px;
@@ -28,6 +29,13 @@
     padding: 0 16px 8px;
     font-size: 15px;
     opacity: 0.9;
+  }
+
+  .signout-item {
+    &:hover,
+    &:focus-visible {
+      background-color: var(--mat-sys-secondary-container);
+    }
   }
 }
 

@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { StandardResponse } from '../models/api-response';
-import { ChartSeries, LatestTelemetry } from '../models/telemetry';
+import { ChartSeries, LatestTelemetry, AggregatedSeries } from '../models/telemetry';
 
 @Injectable({ providedIn: 'root' })
 export class TelemetryService {
@@ -20,5 +20,15 @@ export class TelemetryService {
 
   getLatest(deviceId: number): Observable<StandardResponse<LatestTelemetry>> {
     return this.http.get<StandardResponse<LatestTelemetry>>(`${this.baseUrl}/${deviceId}/telemetry/latest`);
+  }
+
+  getAggregatedChart(
+    deviceId: number, from?: string, to?: string, keys?: string[], maxPoints = 150,
+  ): Observable<StandardResponse<AggregatedSeries[]>> {
+    const params: Record<string, string | number> = { maxPoints };
+    if (from) params['from'] = from;
+    if (to) params['to'] = to;
+    if (keys && keys.length) params['keys'] = keys.join(',');
+    return this.http.get<StandardResponse<AggregatedSeries[]>>(`${this.baseUrl}/${deviceId}/telemetry/aggregate`, { params });
   }
 }

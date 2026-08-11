@@ -21,6 +21,19 @@ export interface ChartSeries {
   points: ChartPoint[];
 }
 
+export interface AggregatedPoint {
+  timestamp: string;
+  average: number;
+  min: number;
+  max: number;
+}
+
+export interface AggregatedSeries {
+  key: string;
+  unit: string | null;
+  points: AggregatedPoint[];
+}
+
 export interface LatestTelemetry {
   timestamp: string;
   readings: SensorReading[];

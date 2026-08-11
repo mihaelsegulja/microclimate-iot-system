@@ -32,6 +32,7 @@ public static class DeviceEndpoints
         group.MapPut("/{id:int}/config", UpdateConfigAsync).WithName("UpdateDeviceConfig").WithOpenApi();
         group.MapPost("/{id:int}/reboot", RebootAsync).WithName("RebootDevice").WithOpenApi();
         group.MapGet("/{id:int}/telemetry", GetTelemetryAsync).WithName("GetDeviceTelemetry").WithOpenApi();
+        group.MapGet("/{id:int}/telemetry/aggregate", GetAggregatedTelemetryAsync).WithName("GetDeviceAggregatedTelemetry").WithOpenApi();
         group.MapGet("/{id:int}/telemetry/latest", GetLatestTelemetryAsync).WithName("GetDeviceLatestTelemetry").WithOpenApi();
 
         return app;
@@ -158,6 +159,19 @@ public static class DeviceEndpoints
         CancellationToken cancellationToken)
     {
         var response = await telemetryService.GetLatestAsync(id, cancellationToken);
+        return ResultHandler.Handle(response);
+    }
+
+    private static async Task<IResult> GetAggregatedTelemetryAsync(
+        int id,
+        [FromQuery] DateTime? from,
+        [FromQuery] DateTime? to,
+        [FromQuery] string? keys,
+        [FromQuery] int maxPoints = 150,
+        ITelemetryService telemetryService = null!,
+        CancellationToken cancellationToken = default)
+    {
+        var response = await telemetryService.GetAggregatedChartAsync(id, from, to, ParseKeys(keys), maxPoints, cancellationToken);
         return ResultHandler.Handle(response);
     }
 

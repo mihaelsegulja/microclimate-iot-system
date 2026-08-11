@@ -42,6 +42,28 @@ public class TelemetryService(IAppDbContext db) : ITelemetryService
         return StandardResponse<LatestTelemetryDto>.SuccessOk(latest);
     }
 
+    public async Task<StandardResponse<List<AggregatedSeriesDto>>> GetAggregatedChartAsync(
+        int deviceId, DateTime? from, DateTime? to, IReadOnlyList<string>? keys, int maxPoints,
+        CancellationToken cancellationToken = default)
+    {
+        var hardwareId = await ResolveHardwareIdAsync(deviceId, cancellationToken);
+        if (hardwareId == null)
+            return StandardResponse<List<AggregatedSeriesDto>>.NotFound($"Device with id {deviceId} not found.");
+
+        var fromUtc = from?.ToUniversalTime() ?? DateTime.UtcNow.AddDays(-1);
+        var toUtc = to?.ToUniversalTime() ?? DateTime.UtcNow;
+        if (toUtc <= fromUtc)
+            toUtc = fromUtc.AddHours(1);
+
+        var bucketSeconds = ChartQueryExtensions.ComputeBucketSeconds(toUtc - fromUtc, maxPoints);
+
+        var query = BuildQuery(hardwareId, fromUtc, toUtc, keys);
+
+        var series = await query.ToAggregatedSeriesAsync(bucketSeconds, cancellationToken);
+
+        return StandardResponse<List<AggregatedSeriesDto>>.SuccessOk(series);
+    }
+
     private async Task<string?> ResolveHardwareIdAsync(int deviceId, CancellationToken cancellationToken = default)
     {
         return await db.Devices

@@ -15,6 +15,7 @@ export const routes: Routes = [
       { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
       {
         path: 'dashboard',
+        providers: [provideCharts(withDefaultRegisterables())],
         loadComponent: () => import('./pages/dashboard/dashboard').then((m) => m.DashboardComponent),
       },
       {

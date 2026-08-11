@@ -1,0 +1,55 @@
+@use '../../../styles/chart-card';
+
+.page-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+
+  h1 {
+    font-size: 22px;
+    font-weight: 500;
+    margin: 0;
+  }
+}
+
+.dashboard-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+
+  .room-field {
+    min-width: 240px;
+  }
+
+  .range-field {
+    min-width: 260px;
+  }
+
+  .presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+
+    button.active {
+      background: rgba(51, 117, 255, 0.1);
+      border-color: #3375ff;
+      color: #3375ff;
+    }
+  }
+}
+
+.chart-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.empty-card {
+  padding: 24px;
+  text-align: center;
+  color: #777;
+}

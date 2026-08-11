@@ -13,3 +13,8 @@ html, body {
   --mdc-snackbar-supporting-text-color: #fff;
   --mat-snack-bar-button-color: #fff;
 }
+
+.mat-mdc-form-field {
+  --mat-form-field-container-height: 42px;
+  --mat-form-field-container-vertical-padding: 10px;
+}

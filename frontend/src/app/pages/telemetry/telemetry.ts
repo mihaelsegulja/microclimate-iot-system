@@ -10,14 +10,15 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { BaseChartDirective } from 'ng2-charts';
-import { ChartOptions, TooltipItem } from 'chart.js';
+import { ChartOptions } from 'chart.js';
 import { Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { Device } from '../../models/device';
-import { SensorReading, ChartSeries, ChartPoint } from '../../models/telemetry';
+import { SensorReading, ChartSeries, ChartPoint, AggregatedSeries } from '../../models/telemetry';
 import { keyLabel, unitLabel, getKeyColor, getKeyFillColor } from '../../utils/sensor-labels';
 import { formatDateTime, formatAxis } from '../../utils/date-format';
 import { formatNumber } from '../../utils/format-number';
+import { buildAggregatedChart, summarizePoints, ChartSummary, buildAggregatedTooltipLabel } from '../../utils/chart';
 import { DeviceService } from '../../services/device.service';
 import { TelemetryService } from '../../services/telemetry.service';
 import { SignalRService } from '../../services/signalr.service';
@@ -69,7 +70,6 @@ export class TelemetryComponent implements OnInit, OnDestroy {
   readonly activePreset = signal<number | null>(24);
   readonly from = signal<Date | null>(null);
   readonly to = signal<Date | null>(null);
-  readonly series = signal<ChartSeries[]>([]);
   readonly selectedKeys = signal<Set<string>>(new Set());
   readonly rangeHours = computed(() => {
     const from = this.from();
@@ -77,10 +77,24 @@ export class TelemetryComponent implements OnInit, OnDestroy {
     if (!from || !to) return 24;
     return Math.max(1, Math.round((to.getTime() - from.getTime()) / 3600_000));
   });
-  readonly charts = computed(() =>
-    this.series()
+  readonly historySeries = signal<AggregatedSeries[]>([]);
+  readonly historyCharts = computed(() =>
+    this.historySeries()
       .filter((s) => this.selectedKeys().has(s.key))
-      .map((s) => this.buildChart(s.key, s.unit, s.points, this.rangeHours())),
+      .map((s) => {
+        const data = buildAggregatedChart(
+          [{ color: getKeyColor(s.key), points: s.points }],
+          this.rangeHours(),
+        );
+        return {
+          key: s.key,
+          label: keyLabel(s.key),
+          unit: unitLabel(s.unit),
+          data,
+          summary: summarizePoints(s.points),
+          options: this.chartOptions,
+        };
+      }),
   );
   readonly liveCharts = computed(() =>
     this.liveSeries().map((s) => this.buildChart(s.key, s.unit, s.points, 1)),
@@ -93,8 +107,10 @@ export class TelemetryComponent implements OnInit, OnDestroy {
       legend: { display: false },
       tooltip: {
         enabled: true,
+        filter: (item) =>
+          !(item.dataset as { isBand?: boolean }).isBand,
         callbacks: {
-          label: (ctx: TooltipItem<'line'>) => this.formatValue(ctx.parsed.y),
+          label: buildAggregatedTooltipLabel((v) => this.formatValue(v)),
         },
       },
     },
@@ -325,11 +341,11 @@ export class TelemetryComponent implements OnInit, OnDestroy {
     if (!from || !to) return;
 
     this.telemetryService
-      .getChart(this.deviceId, from.toISOString(), to.toISOString())
+      .getAggregatedChart(this.deviceId, from.toISOString(), to.toISOString(), undefined, 150)
       .subscribe({
         next: (res) => {
           const data = res.data ?? [];
-          this.series.set(data);
+          this.historySeries.set(data);
           this.selectedKeys.set(new Set(data.map((s) => s.key)));
         },
         error: () => undefined,

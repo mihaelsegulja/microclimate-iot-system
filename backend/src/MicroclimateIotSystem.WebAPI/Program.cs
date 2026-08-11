@@ -87,6 +87,7 @@ app.UseAuthorization();
 app.MapAuthEndpoints();
 app.MapDeviceEndpoints();
 app.MapRoomEndpoints();
+app.MapDashboardEndpoints();
 app.MapAlertRuleEndpoints();
 app.MapAlertEndpoints();
 

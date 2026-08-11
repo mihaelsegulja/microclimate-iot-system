@@ -29,7 +29,7 @@
       @if (username()) {
         <div class="username">{{ username() }}</div>
       }
-      <a mat-list-item (click)="signOut()">
+      <a mat-list-item class="signout-item" (click)="signOut()">
         <mat-icon matListItemIcon>logout</mat-icon>
         <span matListItemTitle>Sign out</span>
       </a>

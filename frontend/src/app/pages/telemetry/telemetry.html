@@ -99,10 +99,10 @@
             </div>
           </div>
 
-          @if (series().length > 0) {
+          @if (historySeries().length > 0) {
             <div class="key-chips">
               <span class="key-label">Keys:</span>
-              @for (s of series(); track s.key) {
+              @for (s of historySeries(); track s.key) {
                 <button
                   mat-stroked-button
                   [class.active]="isKeySelected(s.key)"
@@ -114,11 +114,11 @@
             </div>
           }
 
-          @if (charts().length === 0) {
+          @if (historyCharts().length === 0) {
             <mat-card class="empty-card">No telemetry in the selected range.</mat-card>
           } @else {
             <div class="chart-grid">
-              @for (c of charts(); track c.key) {
+              @for (c of historyCharts(); track c.key) {
                 <mat-card class="chart-card">
                   <mat-card-content class="chart-body">
                     <div class="chart-title-row">
@@ -126,6 +126,11 @@
                       @if (c.unit) {
                         <span class="chart-unit">{{ c.unit }}</span>
                       }
+                    </div>
+                    <div class="chart-summary">
+                      <span class="summary-chip">Avg: {{ formatValue(c.summary.average) }}</span>
+                      <span class="summary-chip">Min: {{ formatValue(c.summary.min) }}</span>
+                      <span class="summary-chip">Max: {{ formatValue(c.summary.max) }}</span>
                     </div>
                     <div class="chart-canvas">
                       <canvas baseChart type="line" [data]="c.data" [options]="c.options"></canvas>

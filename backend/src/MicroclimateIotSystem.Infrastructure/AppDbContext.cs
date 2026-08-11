@@ -84,7 +84,6 @@ public class AppDbContext : DbContext, IAppDbContext
                 .IsUnicode(false)
                 .IsRequired();
             entity.Property(e => e.Value)
-                .HasColumnType("real")
                 .IsRequired();
             entity.Property(e => e.Unit)
                 .HasMaxLength(50)
@@ -117,7 +116,6 @@ public class AppDbContext : DbContext, IAppDbContext
                 .IsUnicode(false)
                 .IsRequired();
             entity.Property(e => e.ThresholdValue)
-                .HasColumnType("real")
                 .IsRequired();
             entity.Property(e => e.Operator)
                 .IsRequired();
@@ -149,10 +147,8 @@ public class AppDbContext : DbContext, IAppDbContext
                 .IsUnicode(false)
                 .IsRequired(false);
             entity.Property(e => e.Value)
-                .HasColumnType("real")
                 .IsRequired();
             entity.Property(e => e.ThresholdValue)
-                .HasColumnType("real")
                 .IsRequired();
             entity.Property(e => e.Operator)
                 .IsRequired();

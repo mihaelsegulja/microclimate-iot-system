@@ -13,4 +13,8 @@ public interface ITelemetryService
         CancellationToken cancellationToken = default);
 
     Task<StandardResponse<LatestTelemetryDto>> GetLatestAsync(int deviceId, CancellationToken cancellationToken = default);
+
+    Task<StandardResponse<List<AggregatedSeriesDto>>> GetAggregatedChartAsync(
+        int deviceId, DateTime? from, DateTime? to, IReadOnlyList<string>? keys, int maxPoints,
+        CancellationToken cancellationToken = default);
 }
