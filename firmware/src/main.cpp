@@ -23,13 +23,8 @@ char hardwareId[24];
 char pubTopic[64];
 char subTopic[64];
 
-volatile bool forceReadFlag = false;
 unsigned long lastReadMs = 0;
 uint32_t telemetryIntervalSec = DEFAULT_INTERVAL_SEC;
-
-void onForceRead() {
-    forceReadFlag = true;
-}
 
 void onMqttMessage(const char* topic, JsonDocument& doc) {
     cmdHandler.handle(topic, doc);
@@ -72,7 +67,6 @@ void setup() {
     mqtt.setCallback(onMqttMessage);
 
     cmdHandler.begin(&nvs);
-    cmdHandler.setForceReadCallback(onForceRead);
 
     Serial.println("[BOOT] Setup complete");
 }
@@ -82,12 +76,10 @@ void loop() {
     mqtt.handle();
     ntpClient.update();
 
-    bool readyToRead = forceReadFlag ||
-        (mqtt.isConnected() && millis() - lastReadMs >= telemetryIntervalSec * 1000UL);
+    bool readyToRead =
+        mqtt.isConnected() && millis() - lastReadMs >= telemetryIntervalSec * 1000UL;
 
     if (readyToRead) {
-        forceReadFlag = false;
-
         SensorReadings readings;
         if (!sensors.read(readings)) {
             Serial.println("[MAIN] Sensor read failed, skipping publish");

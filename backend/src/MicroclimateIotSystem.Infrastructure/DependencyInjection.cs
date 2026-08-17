@@ -1,12 +1,10 @@
 using MicroclimateIotSystem.Application.Common.Interfaces.Security;
 using MicroclimateIotSystem.Application.Configurations;
 using MicroclimateIotSystem.Application.Interfaces;
-using MicroclimateIotSystem.Application.Interfaces.Common;
 using MicroclimateIotSystem.Application.Interfaces.Queue;
 using MicroclimateIotSystem.Infrastructure.Caching;
 using MicroclimateIotSystem.Infrastructure.Messaging;
 using MicroclimateIotSystem.Infrastructure.Security.Helpers;
-using MicroclimateIotSystem.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
@@ -35,7 +33,6 @@ public static class DependencyInjection
 
         services.AddScoped<IPasswordHelper, PasswordHelper>();
         services.AddScoped<ITokenHelper, TokenHelper>();
-        services.AddScoped<ICurrentUserService, CurrentUserService>();
 
         services.AddSingleton<IConnection>(sp =>
         {

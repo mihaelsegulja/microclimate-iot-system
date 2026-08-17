@@ -5,10 +5,6 @@ void CommandHandler::begin(NvsManager* nvs) {
     _nvs = nvs;
 }
 
-void CommandHandler::setForceReadCallback(ForceReadCallback cb) {
-    _forceReadCb = cb;
-}
-
 bool CommandHandler::handle(const char* topic, JsonDocument& doc) {
     const char* commandType = doc["commandType"];
 
@@ -32,11 +28,6 @@ bool CommandHandler::handle(const char* topic, JsonDocument& doc) {
         return true;
     }
 
-    if (strcmp(commandType, "FORCE_READ") == 0) {
-        handleForceRead();
-        return true;
-    }
-
     Serial.printf("[CMD] Unknown command: %s\n", commandType);
     return false;
 }
@@ -53,11 +44,4 @@ void CommandHandler::handleReboot() {
     Serial.println("[CMD] Rebooting in 1s...");
     delay(1000);
     ESP.restart();
-}
-
-void CommandHandler::handleForceRead() {
-    Serial.println("[CMD] Force read triggered");
-    if (_forceReadCb) {
-        _forceReadCb();
-    }
 }
