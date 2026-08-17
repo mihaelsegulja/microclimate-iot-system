@@ -1,12 +1,11 @@
 import { Routes } from '@angular/router';
 import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
 import { authGuard } from './auth/auth.guard';
-import { LoginComponent } from './auth/login/login';
-import { RegisterComponent } from './auth/register/register';
+import { AuthPageComponent } from './auth/auth-page';
 
 export const routes: Routes = [
-  { path: 'login', component: LoginComponent },
-  { path: 'register', component: RegisterComponent },
+  { path: 'login', component: AuthPageComponent },
+  { path: 'register', component: AuthPageComponent, data: { mode: 'register' } },
   {
     path: '',
     canActivate: [authGuard],

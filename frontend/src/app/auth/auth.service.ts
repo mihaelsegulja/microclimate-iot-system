@@ -1,7 +1,8 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, tap, map, Subject } from 'rxjs';
+import { Observable, tap, map, Subject, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { AuthResponse, LoginRequest, RegisterRequest } from './auth.models';
 import { StandardResponse } from '../models/api-response';
 import { environment } from '../../environments/environment';
@@ -72,18 +73,14 @@ export class AuthService {
 
     return this.refresh().pipe(
       map(() => true),
-      tap({
-        next: (ok) => {
-          this._refreshInProgress = false;
-          this._refreshSubject.next(ok);
-          this._refreshSubject.complete();
-        },
-        error: () => {
-          this.clearToken();
-          this._refreshInProgress = false;
-          this._refreshSubject.next(false);
-          this._refreshSubject.complete();
-        }
+      catchError(() => {
+        this.clearToken();
+        return of(false);
+      }),
+      tap((ok) => {
+        this._refreshInProgress = false;
+        this._refreshSubject.next(ok);
+        this._refreshSubject.complete();
       })
     );
   }

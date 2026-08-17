@@ -1,7 +1,7 @@
 <div class="auth-container">
   <mat-card>
     <mat-card-header>
-      <mat-card-title>Create account</mat-card-title>
+      <mat-card-title>{{ isRegister ? 'Create account' : 'Sign in' }}</mat-card-title>
     </mat-card-header>
 
     <mat-card-content>
@@ -9,16 +9,16 @@
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Username</mat-label>
           <input matInput formControlName="username" autocomplete="username" />
-          @if (form.controls.username.hasError('minlength')) {
+          @if (isRegister && form.controls.username.hasError('minlength')) {
             <mat-error>At least 3 characters</mat-error>
           }
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Password</mat-label>
-          <input matInput type="password" formControlName="password" autocomplete="new-password" />
-          @if (form.controls.password.hasError('minlength')) {
-            <mat-error>At least 6 characters</mat-error>
+          <input matInput type="password" formControlName="password" [autocomplete]="isRegister ? 'new-password' : 'current-password'" />
+          @if (isRegister && form.controls.password.hasError('minlength')) {
+            <mat-error>At least 3 characters</mat-error>
           }
         </mat-form-field>
 
@@ -27,13 +27,15 @@
         }
 
         <button mat-raised-button color="primary" type="submit" class="full-width" [disabled]="loading">
-          {{ loading ? 'Creating account...' : 'Create account' }}
+          {{ loading ? (isRegister ? 'Creating account...' : 'Signing in...') : (isRegister ? 'Create account' : 'Sign in') }}
         </button>
       </form>
     </mat-card-content>
 
     <mat-card-actions align="end">
-      <a mat-button routerLink="/login">Already have an account</a>
+      <a mat-button [routerLink]="isRegister ? '/login' : '/register'">
+        {{ isRegister ? 'Already have an account' : 'Create account' }}
+      </a>
     </mat-card-actions>
   </mat-card>
 </div>

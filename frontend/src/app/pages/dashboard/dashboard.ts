@@ -7,6 +7,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatInputModule } from '@angular/material/input';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartOptions } from 'chart.js';
@@ -15,9 +16,9 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { LookupItem } from '../../models/common';
 import { DashboardTelemetry } from '../../models/dashboard';
 import { keyLabel, unitLabel } from '../../utils/sensor-labels';
-import { formatAxis } from '../../utils/date-format';
 import { formatNumber } from '../../utils/format-number';
-import { buildAggregatedChart, summarizePoints, deviceColor, buildAggregatedTooltipLabel } from '../../utils/chart';
+import { buildAggregatedChart, buildChartOptions, summarizePoints, ChartView, loadChartView, saveChartView } from '../../utils/chart';
+import { deviceColor } from '../../utils/color';
 import { RoomService } from '../../services/room.service';
 import { DashboardService } from '../../services/dashboard.service';
 
@@ -37,6 +38,7 @@ interface DashboardKeyChart {
     ReactiveFormsModule,
     MatIconModule, MatButtonModule, MatCardModule, MatSelectModule,
     MatFormFieldModule, MatProgressBarModule, MatDatepickerModule, MatInputModule,
+    MatButtonToggleModule,
     BaseChartDirective,
   ],
   templateUrl: './dashboard.html',
@@ -51,6 +53,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   readonly selectedRoomId = signal<number | null>(null);
   readonly data = signal<DashboardTelemetry | null>(null);
   readonly loading = signal(false);
+  readonly chartView = signal<ChartView>(loadChartView());
   readonly rangeHours = computed(() => {
     const from = this.from();
     const to = this.to();
@@ -95,32 +98,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
     });
   });
 
-  readonly chartOptions: ChartOptions<'line'> = {
-    responsive: true,
-    maintainAspectRatio: false,
-    animation: false,
-    plugins: {
-      legend: { display: false },
-      tooltip: {
-        enabled: true,
-        filter: (item) =>
-          !(item.dataset as { isBand?: boolean }).isBand,
-        callbacks: {
-          label: buildAggregatedTooltipLabel((v) => this.formatValue(v), true),
-        },
-      },
-    },
-    scales: {
-      x: {
-        ticks: { maxTicksLimit: 6, font: { size: 10 }, maxRotation: 0 },
-        grid: { display: false },
-      },
-      y: {
-        ticks: { font: { size: 11 }, maxTicksLimit: 5 },
-        grid: { color: 'rgba(0,0,0,0.06)' },
-      },
-    },
-  };
+  readonly chartOptions: ChartOptions<'line'> = buildChartOptions(
+    (v) => this.formatValue(v),
+    true,
+  );
 
   ngOnInit(): void {
     this.loadRooms();
@@ -175,6 +156,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.from.set(period.start);
     this.to.set(period.end);
     this.loadDashboard();
+  }
+
+  setChartView(view: ChartView): void {
+    this.chartView.set(view);
+    saveChartView(view);
   }
 
   formatValue(value: number | null | undefined): string {

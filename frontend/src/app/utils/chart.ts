@@ -1,6 +1,19 @@
-import { TooltipItem } from 'chart.js';
-import { AggregatedPoint } from '../models/telemetry';
+import { TooltipItem, ChartOptions } from 'chart.js';
+import { AggregatedPoint, ChartPoint } from '../models/telemetry';
 import { formatAxis } from './date-format';
+import { hexToRgba } from './color';
+
+export type ChartView = 'grid' | 'list';
+
+const CHART_VIEW_KEY = 'chart-view';
+
+export function loadChartView(): ChartView {
+  return localStorage.getItem(CHART_VIEW_KEY) === 'list' ? 'list' : 'grid';
+}
+
+export function saveChartView(view: ChartView): void {
+  localStorage.setItem(CHART_VIEW_KEY, view);
+}
 
 export interface ChartSummary {
   average: number;
@@ -45,14 +58,6 @@ export function summarizePoints(points: AggregatedPoint[]): ChartSummary {
     min: Math.min(...points.map((p) => p.min)),
     max: Math.max(...points.map((p) => p.max)),
   };
-}
-
-export function hexToRgba(hex: string, alpha: number): string {
-  const value = hex.replace('#', '');
-  const r = parseInt(value.slice(0, 2), 16);
-  const g = parseInt(value.slice(2, 4), 16);
-  const b = parseInt(value.slice(4, 6), 16);
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
 export function buildAggregatedChart(
@@ -128,7 +133,7 @@ export function buildAggregatedChart(
   return { labels, datasets };
 }
 
-export function buildAggregatedTooltipLabel(
+function buildAggregatedTooltipLabel(
   formatValue: (v: number | null | undefined) => string,
   showLabel = false,
 ): (ctx: TooltipItem<'line'>) => string[] {
@@ -144,19 +149,78 @@ export function buildAggregatedTooltipLabel(
   };
 }
 
-export const DEVICE_PALETTE = [
-  '#3375ff',
-  '#ab47bc',
-  '#26c6da',
-  '#ffa726',
-  '#43a047',
-  '#ff7043',
-  '#8d6e63',
-  '#ec407a',
-  '#5c6bc0',
-  '#66bb6a',
-];
+export interface LineChartData {
+  labels: string[];
+  datasets: Array<{
+    data: number[];
+    borderColor: string;
+    backgroundColor: string;
+    fill: boolean;
+    tension: number;
+    pointRadius: number;
+    pointHoverRadius: number;
+    pointBorderWidth: number;
+    pointBackgroundColor: string;
+  }>;
+}
 
-export function deviceColor(index: number): string {
-  return DEVICE_PALETTE[index % DEVICE_PALETTE.length];
+export function buildLineChart(
+  color: string,
+  fillColor: string,
+  points: ChartPoint[],
+  rangeHours: number,
+): LineChartData {
+  return {
+    labels: points.map((p) => formatAxis(p.timestamp, rangeHours)),
+    datasets: [{
+      data: points.map((p) => p.value),
+      fill: true,
+      borderColor: color,
+      backgroundColor: fillColor,
+      tension: 0.2,
+      pointRadius: 4,
+      pointHoverRadius: 7,
+      pointBorderWidth: 1,
+      pointBackgroundColor: '#fff',
+    }],
+  };
+}
+
+export function buildChartOptions(
+  formatValue: (v: number | null | undefined) => string,
+  showLabel = false,
+): ChartOptions<'line'> {
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    animation: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        enabled: true,
+        filter: (item) =>
+          !(item.dataset as { isBand?: boolean }).isBand,
+        callbacks: {
+          label: buildAggregatedTooltipLabel(formatValue, showLabel),
+        },
+      },
+    },
+    scales: {
+      x: {
+        ticks: {
+          maxTicksLimit: 6,
+          font: { size: 10 },
+          maxRotation: 0,
+        },
+        grid: { display: false },
+      },
+      y: {
+        ticks: {
+          font: { size: 11 },
+          maxTicksLimit: 5,
+        },
+        grid: { color: 'rgba(0,0,0,0.06)' },
+      },
+    },
+  };
 }

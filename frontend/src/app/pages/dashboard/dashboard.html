@@ -40,6 +40,19 @@
       </button>
     }
   </div>
+
+  <mat-button-toggle-group
+    class="chart-layout-toggle"
+    [value]="chartView()"
+    (change)="setChartView($event.value)"
+  >
+    <mat-button-toggle value="grid">
+      <mat-icon>grid_view</mat-icon>
+    </mat-button-toggle>
+    <mat-button-toggle value="list">
+      <mat-icon>view_list</mat-icon>
+    </mat-button-toggle>
+  </mat-button-toggle-group>
 </div>
 
 @if (selectedRoomId() == null) {
@@ -47,7 +60,7 @@
 } @else if (charts().length === 0 && !loading()) {
   <mat-card class="empty-card">No telemetry in the selected range.</mat-card>
 } @else {
-  <div class="chart-grid">
+  <div class="chart-grid" [class.list-view]="chartView() === 'list'">
     @for (c of charts(); track c.key) {
       <mat-card class="chart-card">
         <mat-card-content class="chart-body">

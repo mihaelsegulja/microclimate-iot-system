@@ -1,11 +1,23 @@
 <div class="page-header telemetry-header">
-  <button mat-icon-button (click)="back()" aria-label="Back">
+  <button mat-icon-button (click)="back()">
     <mat-icon>arrow_back</mat-icon>
   </button>
   <h1>Telemetry</h1>
   @if (device(); as d) {
     <span class="subtitle">{{ d.name }} · {{ d.hardwareId }}</span>
   }
+  <mat-button-toggle-group
+    class="chart-layout-toggle"
+    [value]="chartView()"
+    (change)="setChartView($event.value)"
+  >
+    <mat-button-toggle value="grid">
+      <mat-icon>grid_view</mat-icon>
+    </mat-button-toggle>
+    <mat-button-toggle value="list">
+      <mat-icon>view_list</mat-icon>
+    </mat-button-toggle>
+  </mat-button-toggle-group>
 </div>
 
 @if (loading()) {
@@ -51,7 +63,7 @@
               }
             </div>
 
-            <div class="chart-grid">
+            <div class="chart-grid live-charts" [class.list-view]="chartView() === 'list'">
               @for (c of liveCharts(); track c.key) {
                 <mat-card class="chart-card">
                   <mat-card-content class="chart-body">
@@ -117,7 +129,7 @@
           @if (historyCharts().length === 0) {
             <mat-card class="empty-card">No telemetry in the selected range.</mat-card>
           } @else {
-            <div class="chart-grid">
+            <div class="chart-grid history-charts" [class.list-view]="chartView() === 'list'">
               @for (c of historyCharts(); track c.key) {
                 <mat-card class="chart-card">
                   <mat-card-content class="chart-body">

@@ -9,19 +9,20 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { BaseChartDirective } from 'ng2-charts';
-import { ChartOptions } from 'chart.js';
 import { Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { Device } from '../../models/device';
 import { SensorReading, ChartSeries, ChartPoint, AggregatedSeries } from '../../models/telemetry';
-import { keyLabel, unitLabel, getKeyColor, getKeyFillColor } from '../../utils/sensor-labels';
-import { formatDateTime, formatAxis } from '../../utils/date-format';
+import { keyLabel, unitLabel } from '../../utils/sensor-labels';
+import { formatDateTime } from '../../utils/date-format';
 import { formatNumber } from '../../utils/format-number';
-import { buildAggregatedChart, summarizePoints, ChartSummary, buildAggregatedTooltipLabel } from '../../utils/chart';
+import { getKeyColor, getKeyFillColor } from '../../utils/color';
 import { DeviceService } from '../../services/device.service';
 import { TelemetryService } from '../../services/telemetry.service';
 import { SignalRService } from '../../services/signalr.service';
+import { buildAggregatedChart, buildLineChart, buildChartOptions, summarizePoints, ChartView, loadChartView, saveChartView } from '../../utils/chart';
 
 type View = 'live' | 'history';
 
@@ -35,7 +36,7 @@ interface LiveReading extends SensorReading {
     ReactiveFormsModule,
     MatIconModule, MatButtonModule, MatProgressBarModule, MatCardModule,
     MatTabsModule,
-    MatDatepickerModule, MatFormFieldModule, MatInputModule,
+    MatDatepickerModule, MatFormFieldModule, MatInputModule, MatButtonToggleModule,
     BaseChartDirective,
   ],
   templateUrl: './telemetry.html',
@@ -54,6 +55,7 @@ export class TelemetryComponent implements OnInit, OnDestroy {
   readonly view = signal<View>('live');
   readonly device = signal<Device | null>(null);
   readonly loading = signal(true);
+  readonly chartView = signal<ChartView>(loadChartView());
 
   // live
   readonly liveReadings = signal<LiveReading[]>([]);
@@ -99,39 +101,7 @@ export class TelemetryComponent implements OnInit, OnDestroy {
   readonly liveCharts = computed(() =>
     this.liveSeries().map((s) => this.buildChart(s.key, s.unit, s.points, 1)),
   );
-  readonly chartOptions: ChartOptions<'line'> = {
-    responsive: true,
-    maintainAspectRatio: false,
-    animation: false,
-    plugins: {
-      legend: { display: false },
-      tooltip: {
-        enabled: true,
-        filter: (item) =>
-          !(item.dataset as { isBand?: boolean }).isBand,
-        callbacks: {
-          label: buildAggregatedTooltipLabel((v) => this.formatValue(v)),
-        },
-      },
-    },
-    scales: {
-      x: {
-        ticks: {
-          maxTicksLimit: 6,
-          font: { size: 10 },
-          maxRotation: 0,
-        },
-        grid: { display: false },
-      },
-      y: {
-        ticks: {
-          font: { size: 11 },
-          maxTicksLimit: 5,
-        },
-        grid: { color: 'rgba(0,0,0,0.06)' },
-      },
-    },
-  };
+  readonly chartOptions = buildChartOptions((v) => this.formatValue(v));
   readonly rangeForm = this.fb.group({
     start: [null as Date | null],
     end: [null as Date | null],
@@ -168,6 +138,11 @@ export class TelemetryComponent implements OnInit, OnDestroy {
     if (hardwareId) this.signalr.leaveDevice(hardwareId).catch(() => undefined);
     this.subscription?.unsubscribe();
     this.rangeSub?.unsubscribe();
+  }
+
+  setChartView(view: ChartView): void {
+    this.chartView.set(view);
+    saveChartView(view);
   }
 
   show(view: View): void {
@@ -303,25 +278,11 @@ export class TelemetryComponent implements OnInit, OnDestroy {
     points: ChartPoint[],
     rangeHours: number,
   ) {
-    const data = {
-      labels: points.map((p) => formatAxis(p.timestamp, rangeHours)),
-      datasets: [{
-        data: points.map((p) => p.value),
-        fill: true,
-        borderColor: getKeyColor(key),
-        backgroundColor: getKeyFillColor(key),
-        tension: 0.2,
-        pointRadius: 4,
-        pointHoverRadius: 7,
-        pointBorderWidth: 1,
-        pointBackgroundColor: '#fff',
-      }],
-    };
     return {
       key,
       label: keyLabel(key),
       unit: unitLabel(unit),
-      data,
+      data: buildLineChart(getKeyColor(key), getKeyFillColor(key), points, rangeHours),
       options: this.chartOptions,
     };
   }
