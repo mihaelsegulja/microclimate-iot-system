@@ -35,37 +35,17 @@ public class RabbitMqTopologyInitializer : IHostedService
                 autoDelete: false,
                 cancellationToken: cancellationToken);
 
-            await channel.ExchangeDeclareAsync(
-                exchange: _options.DlxExchange,
-                type: ExchangeType.Direct,
-                durable: true,
-                autoDelete: false,
-                cancellationToken: cancellationToken);
-
-            var queueArgs = new Dictionary<string, object?>
-            {
-                { "x-dead-letter-exchange", _options.DlxExchange }
-            };
-
             await channel.QueueDeclareAsync(
                 queue: _options.TelemetryQueue,
                 durable: true,
                 exclusive: false,
                 autoDelete: false,
-                arguments: queueArgs,
                 cancellationToken: cancellationToken);
 
             await channel.QueueBindAsync(
                 queue: _options.TelemetryQueue,
                 exchange: _options.ExchangeName,
                 routingKey: _options.TelemetryRoutingPattern,
-                cancellationToken: cancellationToken);
-
-            await channel.QueueDeclareAsync(
-                queue: _options.TelemetryDlq,
-                durable: true,
-                exclusive: false,
-                autoDelete: false,
                 cancellationToken: cancellationToken);
 
             _logger.LogInformation("RabbitMQ topology initialized");

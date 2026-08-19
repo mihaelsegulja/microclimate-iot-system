@@ -71,12 +71,12 @@ public class TelemetryConsumerHostedService : BackgroundService
         }
         catch (JsonException ex)
         {
-            _logger.LogError(ex, "Failed to deserialize message, sending to DLQ");
+            _logger.LogError(ex, "Failed to deserialize message, discarding");
             await channel.BasicNackAsync(eventArgs.DeliveryTag, false, false);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error processing message, sending to DLQ");
+            _logger.LogError(ex, "Error processing message, discarding");
             await channel.BasicNackAsync(eventArgs.DeliveryTag, false, false);
         }
     }
