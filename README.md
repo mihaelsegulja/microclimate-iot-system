@@ -1,6 +1,17 @@
 # Microclimate IoT System
 
-A robust and scalable IoT solution for monitoring microclimate environments using ESP32 microcontrollers. 
+An end-to-end IoT system for monitoring indoor microclimate conditions. ESP32 devices collect readings from BME680 and ENS160 sensors and publish them to RabbitMQ over MQTT. An ASP.NET Core backend consumes and stores the telemetry, evaluates alert rules, and streams live updates to an Angular dashboard through SignalR.
+
+The system also supports room and device management, historical telemetry charts, configurable measurement intervals, and remote device reboot commands.
+
+## Features
+
+* Live and historical temperature, humidity, pressure, CO2, TVOC, AQI, and gas-resistance monitoring
+* Room and device management with automatic registration of new ESP32 devices
+* Configurable telemetry intervals and remote device reboot commands
+* Alert rules for sensor thresholds
+* Real-time dashboard updates through SignalR
+* RabbitMQ protocol bridge: MQTT for firmware and AMQP 0-9-1 for the backend
 
 ## Tech Stack
 
@@ -9,7 +20,7 @@ A robust and scalable IoT solution for monitoring microclimate environments usin
 *   **Frontend:** Angular 21
 *   **Message Broker:** RabbitMQ
 *   **Database:** MS SQL Server 2022
-*   **Hardware:** ESP32 Microcontrollers
+*   **Hardware:** ESP32, BME680, ENS160
 
 ## Setup & Quick Start
 
@@ -21,16 +32,16 @@ Spin up SQL Server and RabbitMQ using Docker Compose. Ensure you have Docker and
 
 ```bash
 # Start the containers in the background
-docker-compose up -d
+docker compose up -d
 ```
 
 *   **SQL Server:** `localhost:1433` (User: `sa`, Password: `SuperStrong!Passw0rd2024`)
-*   **RabbitMQ Management UI:** <http://localhost:15672> (User: `iot_admin`, Password: `iot_secure_password`)
+*   **RabbitMQ Management UI:** <http://localhost:15672> (User: `iot_admin`, Password: `iot_admin`)
 *   **MQTT Protocol Port:** `1883`
 
 ### 2. Backend Setup (.NET 8)
 
-The backend is built using Native Minimal APIs following Clean Architecture principles.
+The backend uses ASP.NET Core Minimal APIs and follows Clean Architecture principles.
 
 #### Running the API
 The application **automatically applies any pending database migrations upon startup**.
