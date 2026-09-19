@@ -93,7 +93,11 @@ public class DashboardService(IAppDbContext db) : IDashboardService
                             deviceId,
                             name,
                             dg.Key,
-                            dg.Select(b => new AggregatedChartPointDto(b.Timestamp, b.Average, b.Min, b.Max)).ToList());
+                            dg.Select(b => new AggregatedChartPointDto(
+                                epoch.AddSeconds((long)b.Bucket * bucketSeconds),
+                                b.Average,
+                                b.Min,
+                                b.Max)).ToList());
                     })
                     .ToList()))
             .OrderBy(s => s.Key)

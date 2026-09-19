@@ -97,6 +97,10 @@ void loop() {
         JsonDocument doc;
         sensors.toJson(doc, hardwareId, epoch, readings);
 
+        Serial.print("[MQTT] Payload: ");
+        serializeJson(doc, Serial);
+        Serial.println();
+
         mqtt.publish(pubTopic, doc);
 
         lastReadMs = millis();

@@ -5,6 +5,12 @@
 #define BME680_I2C_ADDR_0  0x76
 #define BME680_I2C_ADDR_1  0x77
 
+namespace {
+float roundToTwoDecimals(float value) {
+    return roundf(value * 100.0f) / 100.0f;
+}
+}
+
 bool SensorManager::begin() {
     Wire.begin();
 
@@ -42,13 +48,26 @@ bool SensorManager::initBme680() {
 }
 
 bool SensorManager::initEns160() {
-    _ens.begin();
-    if (!_ens.available()) {
+    _ens52.begin();
+    if (_ens52.available()) {
+        _ens = &_ens52;
+        Serial.println("[SENSOR] ENS160 found at 0x52");
+    } else {
+        _ens53.begin();
+        if (!_ens53.available()) {
+            return false;
+        }
+        _ens = &_ens53;
+        Serial.println("[SENSOR] ENS160 found at 0x53");
+    }
+
+    if (!_ens->setMode(ENS160_OPMODE_STD)) {
+        Serial.println("[SENSOR] ENS160 failed to enter standard mode");
+        _ens = nullptr;
         return false;
     }
 
-    _ens.setMode(ENS160_OPMODE_STD);
-    Serial.println("[SENSOR] ENS160 found in standard mode");
+    Serial.println("[SENSOR] ENS160 standard mode enabled");
 
     return true;
 }
@@ -58,23 +77,23 @@ bool SensorManager::read(SensorReadings& readings) {
     readings.ensValid = false;
 
     if (_bmeFound && _bme.performReading()) {
-        readings.temperature = _bme.temperature;
-        readings.humidity = _bme.humidity;
-        readings.pressure = _bme.pressure / 100.0f;
+        readings.temperature = roundToTwoDecimals(_bme.temperature);
+        readings.humidity = roundToTwoDecimals(_bme.humidity);
+        readings.pressure = roundToTwoDecimals(_bme.pressure / 100.0f);
         readings.gasResistance = _bme.gas_resistance;
         readings.bmeValid = true;
     }
 
     if (_ensFound) {
         if (readings.bmeValid) {
-            _ens.set_envdata(readings.temperature, readings.humidity);
+            _ens->set_envdata(readings.temperature, readings.humidity);
         }
 
-        _ens.measure(true);
+        _ens->measure(true);
 
-        readings.co2 = _ens.geteCO2();
-        readings.tvoc = _ens.getTVOC();
-        readings.aqi = _ens.getAQI();
+        readings.co2 = _ens->geteCO2();
+        readings.tvoc = _ens->getTVOC();
+        readings.aqi = _ens->getAQI();
         readings.ensValid = true;
     }
 
@@ -84,7 +103,7 @@ bool SensorManager::read(SensorReadings& readings) {
         return false;
     }
 
-    Serial.printf("[SENSOR] T=%.1f H=%.1f P=%.0f CO2=%u TVOC=%u AQI=%u\n",
+    Serial.printf("[SENSOR] T=%.2f H=%.2f P=%.2f CO2=%u TVOC=%u AQI=%u\n",
         readings.temperature, readings.humidity, readings.pressure,
         readings.co2, readings.tvoc, readings.aqi);
 

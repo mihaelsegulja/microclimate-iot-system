@@ -18,3 +18,11 @@ html, body {
   --mat-form-field-container-height: 42px;
   --mat-form-field-container-vertical-padding: 10px;
 }
+
+.mat-mdc-card-title {
+  margin-bottom: 10px !important;
+}
+
+.mat-mdc-dialog-container .mat-mdc-dialog-title + .mat-mdc-dialog-content {
+  padding-top: 10px !important;
+}

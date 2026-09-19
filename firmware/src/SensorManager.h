@@ -26,7 +26,9 @@ public:
 
 private:
     Adafruit_BME680 _bme;
-    ScioSense_ENS160 _ens;
+    ScioSense_ENS160 _ens52{ENS160_I2CADDR_0};
+    ScioSense_ENS160 _ens53{ENS160_I2CADDR_1};
+    ScioSense_ENS160* _ens = nullptr;
     bool _bmeFound = false;
     bool _ensFound = false;
 
