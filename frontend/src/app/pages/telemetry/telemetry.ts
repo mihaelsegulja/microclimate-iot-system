@@ -68,6 +68,7 @@ export class TelemetryComponent implements OnInit, OnDestroy {
     { label: '6h', hours: 6 },
     { label: '24h', hours: 24 },
     { label: '7d', hours: 168 },
+    { label: '30d', hours: 720 },
   ];
   readonly activePreset = signal<number | null>(24);
   readonly from = signal<Date | null>(null);
